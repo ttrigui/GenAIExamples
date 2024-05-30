@@ -26,9 +26,9 @@ vector_db:
 # LLM path
 model_path: ckpt/llama-2-7b-chat-hf
 # microservice urls
-model_server_url: http://10.67.127.18:8866/generate
-vector_query_url: http://172.16.186.168:9001/video_llama_retriever/query
-vector_init_url: http://172.16.186.168:9001/video_llama_retriever/init_db
-vector_health_url: http://172.16.186.168:9001/health
-image_insert_url: http://172.16.186.168:9001/video_llama_retriever/upload_images
-text_insert_url: http://172.16.186.168:9001/video_llama_retriever/add_texts
+model_server_url: http://<your_service_ip>:8866/generate
+vector_query_url: http://<your_service_ip>:9001/video_llama_retriever/query
+vector_init_url: http://<your_service_ip>:9001/video_llama_retriever/init_db
+vector_health_url: http://<your_service_ip>:9001/health
+image_insert_url: http://<your_service_ip>:9001/video_llama_retriever/upload_images
+text_insert_url: http://<your_service_ip>:9001/video_llama_retriever/add_texts

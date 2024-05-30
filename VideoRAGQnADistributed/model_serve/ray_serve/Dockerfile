@@ -6,11 +6,6 @@ USER root
 WORKDIR /ray_serve
 COPY . /ray_serve
 
-ENV http_proxy=http://child-prc.intel.com:913
-ENV https_proxy=http://child-prc.intel.com:913
-ENV HTTP_PROXY=http://child-prc.intel.com:913
-ENV HTTPS_PROXY=http://child-prc.intel.com:913
-
 #prerequest
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends \

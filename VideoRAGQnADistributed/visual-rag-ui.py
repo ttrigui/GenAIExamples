@@ -12,15 +12,6 @@ from queue import Queue, Empty
 
 set_seed(22)
 
-def set_proxy(addr:str):
-    # for DNS: "http://child-prc.intel.com:913"
-    # for Huggingface downloading: "http://proxy-igk.intel.com:912"
-    os.environ['http_proxy'] = addr
-    os.environ['https_proxy'] = addr
-    os.environ['HTTP_PROXY'] = addr
-    os.environ['HTTPS_PROXY'] = addr
-
-set_proxy("http://proxy-igk.intel.com:912")
 if 'config' not in st.session_state.keys():
     st.session_state.config = reader.read_config('./docs/config.yaml')
 
@@ -50,7 +41,6 @@ st.markdown(title_alignment, unsafe_allow_html=True)
 class ModelServerLLM(LLM):
 
     def _call(self, prompt: str, q: Queue):
-        set_proxy("http://child-prc.intel.com:913")
         request_body = {"text": prompt, "config": {}, "stream": True}
         
         response = requests.post(
@@ -92,10 +82,8 @@ class ModelServerLLM(LLM):
 
 def get_data(api_url:str, query:dict):
     try:
-        set_proxy("http://child-prc.intel.com:913")
         response = requests.get(api_url, query)
         response.raise_for_status()
-        set_proxy("http://proxy-igk.intel.com:912")
         return response.json()
     except requests.exceptions.RequestException as e:
         print(e)

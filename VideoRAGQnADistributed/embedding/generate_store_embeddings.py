@@ -12,20 +12,8 @@ config = None
 with open("../docs/config.yaml", 'r') as f:
     config = yaml.safe_load(f)
 
-
-def set_proxy(addr:str):
-    # for DNS: "http://child-prc.intel.com:913"
-    # for Huggingface downloading: "http://proxy-igk.intel.com:912"
-    os.environ['http_proxy'] = addr
-    os.environ['https_proxy'] = addr
-    os.environ['HTTP_PROXY'] = addr
-    os.environ['HTTPS_PROXY'] = addr
- 
 # EMBEDDING MODEL
-set_proxy("http://proxy-igk.intel.com:912")
-clip_embd = OpenCLIPEmbeddings(model_name="ViT-g-14", checkpoint="laion2b_s34b_b88k")
-set_proxy("http://child-prc.intel.com:913")
- 
+clip_embd = OpenCLIPEmbeddings(model_name="ViT-g-14", checkpoint="laion2b_s34b_b88k") 
  
 def read_json(path):
     with open(path) as f:
@@ -73,13 +61,11 @@ def encode_image(uri: str) -> str:
  
  
 def init_vectordb(db_kind:str):
-    # api_url = "http://172.16.186.168:9001/video_llama_retriever/init_db"
     url = config["vector_init_url"]
     results = post_data(url, {"selected_db": db_kind})
     return results
 
 def check_health_vectordb():
-    # api_url = "http://172.16.186.168:9001/health"
     url = config["vector_health_url"]
     response = get_data(url, {})
     return response
@@ -90,7 +76,6 @@ def store_into_vectordb(metadata_file_path):
     global_counter = 0
  
     total_videos = len(GMetadata.keys())
-    # api_url = "http://172.16.186.168:9001/video_llama_retriever/upload_images"
     image_insert_url = config["image_insert_url"]
     for _, (video, data) in enumerate(GMetadata.items()):
  
@@ -155,15 +140,12 @@ def generate_text_embeddings():
                     'video': video # video path
                 }
             metadata_list.append(metadata)
-    # api_url = "http://172.16.186.168:9001/video_llama_retriever/add_texts"
     text_insert_url = config["text_insert_url"]
     results = post_data(text_insert_url, {"texts": text_content, "metadatas": metadata_list})
 
 def retrieval_testing():
     Q = 'man holding red basket'
     print (f'Testing Query {Q}')
-    # TODO: Done
-    # api_url = "http://172.16.186.168:9001/video_llama_retriever/query"
     url = config["vector_query_url"]
     results = get_data(url, {"prompt": Q})
     print (results)
@@ -178,6 +160,7 @@ if __name__ == '__main__':
     meta_output_dir = "../"+config['meta_output_dir']
     N = config['number_of_frames_per_second']
     selected_db = config['vector_db']['choice_of_db']
+    
     # Creating DB
     print ('Creating DB with text and image embedding support, \nIt may take few minutes to download and load all required models if you are running for first time.')
     check_health_vectordb() # health check for vectorDB
