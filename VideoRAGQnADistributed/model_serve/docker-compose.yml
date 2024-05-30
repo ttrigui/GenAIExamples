@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  ray_serve:
+    build:
+      context: ./ray_serve
+      cache_from:
+        - ray_serve:latest
+    image: ray_serve:latest
+    hostname: ray_serve
+    container_name: ray_serve
+    ports:
+      - "8866:8866"
+    volumes:
+      - "./ray_serve/:/ray_serve/"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "../ckpt/llama-2-7b-chat-hf:/ray_serve/llama-2-7b-chat-hf"

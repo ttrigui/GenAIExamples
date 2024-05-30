@@ -1,0 +1,82 @@
+{
+    "15": {
+        "timestamp": 0.4641473137091954,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_15.jpg"
+    },
+    "30": {
+        "timestamp": 0.9614480069690475,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_30.jpg"
+    },
+    "45": {
+        "timestamp": 1.4587487002288997,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_45.jpg"
+    },
+    "60": {
+        "timestamp": 1.956049393488752,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_60.jpg"
+    },
+    "75": {
+        "timestamp": 2.453350086748604,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_75.jpg"
+    },
+    "90": {
+        "timestamp": 2.950650780008456,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_90.jpg"
+    },
+    "105": {
+        "timestamp": 3.4479514732683083,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_105.jpg"
+    },
+    "120": {
+        "timestamp": 3.9452521665281606,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_120.jpg"
+    },
+    "135": {
+        "timestamp": 4.442552859788012,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_135.jpg"
+    },
+    "150": {
+        "timestamp": 4.939853553047865,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_150.jpg"
+    },
+    "165": {
+        "timestamp": 5.437154246307717,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_165.jpg"
+    },
+    "180": {
+        "timestamp": 5.934454939567569,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_180.jpg"
+    },
+    "195": {
+        "timestamp": 6.4317556328274215,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_195.jpg"
+    },
+    "210": {
+        "timestamp": 6.929056326087274,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_210.jpg"
+    },
+    "225": {
+        "timestamp": 7.426357019347126,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_225.jpg"
+    },
+    "240": {
+        "timestamp": 7.923657712606978,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_240.jpg"
+    },
+    "255": {
+        "timestamp": 8.42095840586683,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_255.jpg"
+    },
+    "270": {
+        "timestamp": 8.918259099126683,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_270.jpg"
+    },
+    "285": {
+        "timestamp": 9.415559792386535,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_285.jpg"
+    },
+    "300": {
+        "timestamp": 9.912860485646387,
+        "frame_path": "../video_ingest/frames/op_5_0320241915.mp4_300.jpg"
+    }
+}

@@ -1,0 +1,7 @@
+main_service:
+  host: 0.0.0.0
+  port: 8866
+model_path: "./llama-2-7b-chat-hf"
+# model_path: "../../ckpt/llama-2-7b-chat-hf"
+route_prefix: "/generate"
+ncpus: 112 # check the available core numbers on your machine.

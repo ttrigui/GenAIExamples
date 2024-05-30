@@ -1,0 +1,14 @@
+main_service:
+  host: 0.0.0.0 # Please change to the actual server IP address
+  port: 9001
+chroma_service:
+  host: 0.0.0.0 # Please change to the actual server IP address
+  port: 8000
+vdms_service:
+  host: 0.0.0.0
+  port: 55555
+  engine: "FaissFlat"
+text_embedder: "all-MiniLM-L12-v2"
+image_embedder: "ViT-g-14"
+image_checkpoint: "laion2b_s34b_b88k"
+handler_pickle_path: "/home/data/handler.pkl"

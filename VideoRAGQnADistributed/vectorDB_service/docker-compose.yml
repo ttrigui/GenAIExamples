@@ -1,0 +1,48 @@
+version: "3.9"
+services:
+  chroma:
+    image: chromadb/chroma
+    environment:
+      - ANONYMIZED_TELEMETRY=False
+      - IS_PERSISTENT=True
+      - PERSIST_DIRECTORY=${PERSIST_DIRECTORY:-/chroma/chroma}
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+  vdms:
+    image: intellabs/vdms:latest
+    ports:
+      - "55555:55555"
+  vectordb-manager:
+    build:
+      context: ./gateway
+      cache_from:
+        - vectordb:v1
+      args:
+        HTTP_PROXY: ${http_proxy}
+        HTTPS_PROXY: ${https_proxy}
+    image: vectordb:v1
+    hostname: vectordb
+    container_name: vectordb
+    ports:
+      - "9001:9001"
+    environment:
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
+    volumes:
+      - "./gateway/:/gateway"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/home/$USER/.cache/huggingface:/root/.cache/huggingface" # check your cache default path here
+      - vectordb-data:/home/data
+    depends_on:
+      - chroma
+      - vdms
+volumes:
+  chroma-data:
+    driver: local
+  vectordb-data:
+    driver: local
