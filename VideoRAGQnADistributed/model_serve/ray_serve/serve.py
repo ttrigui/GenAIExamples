@@ -5,12 +5,13 @@ import torch
 import ray
 from ray import serve
 import yaml
-import time
 import asyncio
 from functools import partial
 from queue import Empty
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, TextIteratorStreamer
 import os 
+import time
+from typing import Generator
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -24,7 +25,7 @@ ray.init(_node_ip_address="0.0.0.0",
          dashboard_port=8265,
          log_to_driver=True,
          num_cpus=configs["ncpus"],
-         _temp_dir=dir_path,
+         _temp_dir="/root/tmp",
          )
 
 serve.start(detached=True, 
@@ -34,7 +35,7 @@ serve.start(detached=True,
 @serve.deployment(ray_actor_options={"num_cpus": configs["ncpus"]}, 
                   route_prefix=configs["route_prefix"])
 class Llama2Deployment:
-    def __init__(self, model_path:str):
+    def __init__(self, model_path: str):
         self.device = torch.device("cpu")
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_path, 
@@ -112,6 +113,8 @@ class Llama2Deployment:
         if not streaming_response:
             return self.generate(prompts, **config)
 
+        print("assemble stream response")
+        # stream case
         streamer = TextIteratorStreamer(
             self.tokenizer, skip_prompt=True, timeout=0, skip_special_tokens=True
         )
@@ -125,4 +128,22 @@ class Llama2Deployment:
             media_type="text/plain",
         )
 
-entrypoint = Llama2Deployment.bind(configs["model_path"])
+@serve.deployment()
+class StreamingResponder:
+    def generate_numbers(self, max: int) -> Generator[str, None, None]:
+        for i in range(max):
+            yield str(i)
+            time.sleep(0.1)
+
+    def __call__(self, request: Request) -> StreamingResponse:
+        max = 25
+        gen = self.generate_numbers(int(max))
+        return StreamingResponse(gen, status_code=200, media_type="text/plain")
+
+
+
+# entrypoint = Llama2Deployment.bind(configs["model_path"])
+serve.run(StreamingResponder.bind())
+
+while (True):
+    time.sleep(100)
