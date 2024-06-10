@@ -197,7 +197,8 @@ class VS:
 
         self.update_db(query, n_images)
         image_results = self.update_image_retriever.invoke(query)
-        for r in image_results:
-            print("images:", r.metadata["video"], "\t", r.metadata["date"], "\t", r.metadata["time"], "\n")
+        print("IMAGE RESULTS FROM RETRIEVAL: ", image_results)
+        #for r in image_results:
+            #print("images:", r.metadata["video"], "\t", r.metadata["date"], "\t", r.metadata["time"], "\n")
 
         return image_results

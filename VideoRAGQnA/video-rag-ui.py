@@ -51,9 +51,9 @@ st.markdown(title_alignment, unsafe_allow_html=True)
 def load_models():
     # print("HF Token: ", HUGGINGFACEHUB_API_TOKEN)
     model = AutoModelForCausalLM.from_pretrained(
-        model_path, torch_dtype=torch.float32, device_map="auto", trust_remote_code=True, token=HUGGINGFACEHUB_API_TOKEN
+        model_path, torch_dtype=torch.float32, device_map="auto", trust_remote_code=True, token="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"
     )
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, token=HUGGINGFACEHUB_API_TOKEN)
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, token="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")
     tokenizer.padding_size = "right"
     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True)
 
@@ -114,6 +114,7 @@ def get_top_doc(results, qcnt):
     for r in results:
         try:
             video_name = r.metadata["video"]
+            playback_offset = r.metadata["start of interval in sec"]
             # timestamp = r.metadata["start of interval in sec"]
             if video_name not in hit_score.keys():
                 hit_score[video_name] = 0
@@ -126,15 +127,12 @@ def get_top_doc(results, qcnt):
     if qcnt >= len(x):
         return None
     print(f"top docs = {x}")
-    return {"video": list(x)[qcnt]}
+    return {"video": list(x)[qcnt]}, playback_offset
 
 
 def play_video(x, offset):
     if x is not None:
-        video_file = x.replace(".pt", "")
-        path = video_dir + video_file
-
-        video_file = open(path, "rb")
+        video_file = open(x, "rb")
         video_bytes = video_file.read()
 
         st.video(video_bytes, start_time=offset)
@@ -175,16 +173,15 @@ def RAG(prompt):
 
     print(f"prompt={prompt}\n")
 
-    top_doc = get_top_doc(results, st.session_state["qcnt"])
+    top_doc, playback_offset = get_top_doc(results, st.session_state["qcnt"])
     print("TOP DOC = ", top_doc)
+    print("PLAYBACK OFFSET = ", playback_offset)
     if top_doc == None:
         return None, None
     video_name = top_doc["video"]
-    timestamp = top_doc["start of interval in sec"]
     print('Video from top doc: ', video_name)
-    print('Timestamp for playback: ', timestamp)
 
-    return video_name, timestamp, top_doc
+    return video_name, playback_offset, top_doc
 
 
 def get_description(vn):
@@ -226,7 +223,8 @@ def handle_message():
             else:
                 st.session_state["qcnt"] = 0
                 st.session_state["prevprompt"] = prompt
-            video_name, start_time, top_doc = RAG(prompt)
+            video_name, playback_offset, top_doc = RAG(prompt)
+            print("VIDEO NAME USED IN PLAYBACK: ", video_name)
             if video_name == None:
                 full_response = "No more relevant videos found. Select a different query. \n\n"
                 placeholder.markdown(full_response)
@@ -234,7 +232,7 @@ def handle_message():
             else:
                 with col2:
                     #get metadata of video (what in metadat contains global timestamp of the 10 sec embedding start time), and use 
-                    play_video_from_timestamp(video_name, start_time)
+                    play_video(video_name, playback_offset)
                     # play_video(video_name)
 
                 scene_des = get_description(video_name)

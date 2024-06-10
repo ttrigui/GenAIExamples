@@ -172,7 +172,7 @@ def store_into_vectordb(metadata_dict, selected_db):
         # print('datetime',meta_data['date_time'])
     # generate clip embeddings
     # embedding_list.extend(clip_embd.embed_image(image_name_list))
-
+    print("METADATA LIST BEING USED FOR EMBEDDING: ", metadata_list)
     vs.add_images(
         uris=image_name_list,
         metadatas=metadata_list
