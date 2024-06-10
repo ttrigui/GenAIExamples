@@ -15,9 +15,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStream
 from utils import config_reader as reader
 from utils import prompt_handler as ph
 
-# from vector_stores import db
-HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
-
 set_seed(22)
 
 if "config" not in st.session_state.keys():
@@ -27,7 +24,8 @@ config = st.session_state.config
 
 model_path = config["model_path"]
 video_dir = config["videos"]
-print(video_dir)
+HUGGINGFACEHUB_API_TOKEN = os.getenv("ENTER HF TOKEN HERE", "")
+#print(video_dir)
 video_dir = video_dir.replace("../", "")
 print(video_dir)
 st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
@@ -55,7 +53,6 @@ def load_models():
     model = AutoModelForCausalLM.from_pretrained(
         model_path, torch_dtype=torch.float32, device_map="auto", trust_remote_code=True, token=HUGGINGFACEHUB_API_TOKEN
     )
-
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, token=HUGGINGFACEHUB_API_TOKEN)
     tokenizer.padding_size = "right"
     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True)
@@ -117,6 +114,7 @@ def get_top_doc(results, qcnt):
     for r in results:
         try:
             video_name = r.metadata["video"]
+            # timestamp = r.metadata["start of interval in sec"]
             if video_name not in hit_score.keys():
                 hit_score[video_name] = 0
             hit_score[video_name] += 1
@@ -131,7 +129,7 @@ def get_top_doc(results, qcnt):
     return {"video": list(x)[qcnt]}
 
 
-def play_video(x):
+def play_video(x, offset):
     if x is not None:
         video_file = x.replace(".pt", "")
         path = video_dir + video_file
@@ -139,7 +137,7 @@ def play_video(x):
         video_file = open(path, "rb")
         video_bytes = video_file.read()
 
-        st.video(video_bytes, start_time=0)
+        st.video(video_bytes, start_time=offset)
 
 
 if "llm" not in st.session_state.keys():
@@ -182,8 +180,11 @@ def RAG(prompt):
     if top_doc == None:
         return None, None
     video_name = top_doc["video"]
+    timestamp = top_doc["start of interval in sec"]
+    print('Video from top doc: ', video_name)
+    print('Timestamp for playback: ', timestamp)
 
-    return video_name, top_doc
+    return video_name, timestamp, top_doc
 
 
 def get_description(vn):
@@ -225,14 +226,16 @@ def handle_message():
             else:
                 st.session_state["qcnt"] = 0
                 st.session_state["prevprompt"] = prompt
-            video_name, top_doc = RAG(prompt)
+            video_name, start_time, top_doc = RAG(prompt)
             if video_name == None:
                 full_response = "No more relevant videos found. Select a different query. \n\n"
                 placeholder.markdown(full_response)
                 end = time.time()
             else:
                 with col2:
-                    play_video(video_name)
+                    #get metadata of video (what in metadat contains global timestamp of the 10 sec embedding start time), and use 
+                    play_video_from_timestamp(video_name, start_time)
+                    # play_video(video_name)
 
                 scene_des = get_description(video_name)
                 formatted_prompt = ph.get_formatted_prompt(scene=scene_des, prompt=prompt, history=get_history())
