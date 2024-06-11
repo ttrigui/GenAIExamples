@@ -25,9 +25,7 @@ config = st.session_state.config
 model_path = config["model_path"]
 video_dir = config["videos"]
 HUGGINGFACEHUB_API_TOKEN = os.getenv("ENTER HF TOKEN HERE", "")
-#print(video_dir)
 video_dir = video_dir.replace("../", "")
-print(video_dir)
 st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
 
 st.title("Video RAG")
@@ -51,9 +49,9 @@ st.markdown(title_alignment, unsafe_allow_html=True)
 def load_models():
     # print("HF Token: ", HUGGINGFACEHUB_API_TOKEN)
     model = AutoModelForCausalLM.from_pretrained(
-        model_path, torch_dtype=torch.float32, device_map="auto", trust_remote_code=True, token="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"
+        model_path, torch_dtype=torch.float32, device_map="auto", trust_remote_code=True, token=HUGGINGFACEHUB_API_TOKEN
     )
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, token="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")
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, token=HUGGINGFACEHUB_API_TOKEN)
     tokenizer.padding_size = "right"
     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True)
 
@@ -174,18 +172,16 @@ def RAG(prompt):
     print(f"prompt={prompt}\n")
 
     top_doc, playback_offset = get_top_doc(results, st.session_state["qcnt"])
-    print("TOP DOC = ", top_doc)
-    print("PLAYBACK OFFSET = ", playback_offset)
     if top_doc == None:
         return None, None
     video_name = top_doc["video"]
-    print('Video from top doc: ', video_name)
 
     return video_name, playback_offset, top_doc
 
 
 def get_description(vn):
     content = None
+    vn = os.path.basename(vn)
     des_path = os.path.join(config["description"], vn + ".txt")
     with open(des_path, "r") as file:
         content = file.read()
