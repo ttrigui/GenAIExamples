@@ -1,0 +1,5 @@
+accelerate
+langchain-experimental
+open-clip-torch
+streamlit
+sentence-transformers

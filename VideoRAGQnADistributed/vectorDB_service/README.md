@@ -5,6 +5,7 @@ RESTful API service of vector DB.
 ## Quickstart
 
 ```bash
+export VECTORDB_SERVICE_HOST_IP=<ip of host where vector db is running>
 docker compose build
 docker compose up
 ```
@@ -13,7 +14,7 @@ docker compose up
 
 For full API docs, please visit `http://server_ip:9001/docs` for automatic interactive API documentation (provided by Swagger UI).
 
-Template HTTP request functions:
+Template functions:
 
 ```python
 import requests
@@ -53,11 +54,11 @@ General CRUD operations:
 
 ```python
 # health check
-api_url = "http://<your_ip>:9001/health"
+api_url = "http://172.16.186.168:9001/health"
 results = get_data(api_url)
 
 # add table/collection to db
-api_url = "http://<your_ip>:9001/add_table"
+api_url = "http://172.16.186.168:9001/add_table"
 table = {
     "db_name": "chroma", # chroma or vdms
     "table": "test", # table name
@@ -66,7 +67,7 @@ table = {
 results = post_data(api_url, table)
 
 # add texts to vectorstore
-api_url = "http://<your_ip>:9001/add_texts"
+api_url = "http://172.16.186.168:9001/add_texts"
 text_content = [ "A", "content", "list" ]
 metadata_list = [
     { "source": "A" },
@@ -79,7 +80,7 @@ results = post_data(api_url, {  "db_name": "chroma",
                                 "metadatas": metadata_list})
 
 # add available images to vectorstore
-api_url = "http://<your_ip>:9001/add_images"
+api_url = "http://172.16.186.168:9001/add_images"
 uris = [ "/path/image1", "/path/image2" ]
 metadata_list = [
     { "video": "video1.mp4" },
@@ -91,7 +92,7 @@ results = post_data(api_url, {  "db_name": "chroma",
                                 "metadatas": metadata_list})
 
 # query
-api_url = "http://<your_ip>:9001/search"
+api_url = "http://172.16.186.168:9001/search"
 Q = 'man holding red basket'
 query_dict = {
     "db_name": "chroma",
@@ -106,11 +107,11 @@ Video-llama specific operations:
 
 ```python
 # init vectorstore
-api_url = "http://<your_ip>:9001/video_llama_retriever/init_db"
+api_url = "http://172.16.186.168:9001/visual_rag_retriever/init_db"
 results = post_data(api_url, {"selected_db": "chroma"})
 
 # add texts to vectorstore
-api_url = "http://<your_ip>:9001/video_llama_retriever/add_texts"
+api_url = "http://172.16.186.168:9001/visual_rag_retriever/add_texts"
 text_content = [ "A", "content", "list" ]
 metadata_list = [
     { "source": "A" },
@@ -120,7 +121,7 @@ metadata_list = [
 results = post_data(api_url, {"texts": text_content, "metadatas": metadata_list})
 
 # add available images to vectorstore
-api_url = "http://<your_ip>:9001/video_llama_retriever/add_images"
+api_url = "http://172.16.186.168:9001/visual_rag_retriever/add_images"
 uris = [ "/path/image1", "/path/image2" ]
 metadata_list = [
     { "video": "video1.mp4" },
@@ -129,7 +130,7 @@ metadata_list = [
 results = post_data(api_url, {"uris": uris, "metadatas": metadata_list})
 
 # upload images to vectorstore
-api_url = 'http://<your_ip>:9001/video_llama_retriever/upload_images'
+api_url = 'http://172.16.186.168:9001/visual_rag_retriever/upload_images'
 images = [
     ('images', ('op_1_0320241830.mp4_75.jpg', open('op_1_0320241830.mp4_75.jpg', 'rb'), 'image/jpeg')),
     ('images', ('op_1_0320241830.mp4_75.jpg', open('op_1_0320241830.mp4_75.jpg', 'rb'), 'image/jpeg'))
@@ -139,7 +140,7 @@ metadatas = {'metadatas': json.dumps(metadatas_dict)}
 results = post_file(api_url, images, metadatas)
 
 # multi modal query
-api_url = "http://<your_ip>:9001/video_llama_retriever/query"
+api_url = "http://172.16.186.168:9001/visual_rag_retriever/query"
 Q = 'man holding red basket'
 results = get_data(api_url, {"prompt": Q})
 ```

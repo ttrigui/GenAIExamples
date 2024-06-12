@@ -4,8 +4,9 @@ import os
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 from core.db_handler import DB_Handler
+from utils.utilities import get_db_handler
 
 VIDEO_LLAMA_TEXT_COLLECTION = 'text-test'
 VIDEO_LLAMA_IMAGE_COLLECTION = 'image-test'
@@ -13,15 +14,14 @@ UPLOAD_FRAMES_FOLDER = "/home/data/frames"
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(levelname)s:    [%(asctime)s] %(message)s',
+    format='%(levelname)s:     [%(asctime)s] %(message)s',
     datefmt='%d/%m/%Y %I:%M:%S'
     )
 
-router = APIRouter(prefix="/video_llama_retriever", tags=["video_llama_retriever"])
+router = APIRouter(prefix="/visual_rag_retriever", tags=["visual_rag_retriever"])
 
-def get_db_handler():
-    from main import db_handler
-    return db_handler
+class DB_Name(BaseModel):
+    selected_db: Optional[str] = Field(..., description="Supported: chroma, vdms", example="chroma")
 
 class ImageMetadata(BaseModel):
     metadatas: List[dict]
@@ -32,25 +32,26 @@ class ImageMetadata(BaseModel):
         if isinstance(value, str):
             return cls(**json.loads(value))
         return value
-    
+
 @router.post("/init_db", summary="Init db for video llama")
 @router.post("/init_db/", include_in_schema=False)
 def init_db(
-        selected_db: Optional[str] = "chroma",
+        db_name: DB_Name,
         db_handler: DB_Handler = Depends(get_db_handler)
     ):
 
     try:
         logging.info('Loading db instances')
-        db_handler.selected_db = selected_db
-        db_handler.add_table(selected_db, VIDEO_LLAMA_TEXT_COLLECTION, 'text')
-        db_handler.add_table(selected_db, VIDEO_LLAMA_IMAGE_COLLECTION, 'image')
+        db_handler.selected_db = db_name.selected_db # update to the whole class
+       
+        # db_handler.add_table(selected_db, VIDEO_LLAMA_TEXT_COLLECTION, 'text') # visual RAG updated: only image db
+        db_handler.add_table(db_handler.selected_db, VIDEO_LLAMA_IMAGE_COLLECTION, 'image')
     except Exception as e:
         logging.error(f"Init table failed: {e}", exc_info=True)
         raise HTTPException(status_code=400, 
                             detail=f"Failed to init table, please check the params and try again: {e}") from e
 
-    return JSONResponse({"message:": f"successfully init {selected_db} for video-llama"})
+    return JSONResponse({"message:": f"successfully init {db_name.selected_db} for video-llama"})
   
 @router.post("/add_texts", summary="Add texts to video llama text db")
 @router.post("/add_texts/", include_in_schema=False)
@@ -88,13 +89,13 @@ async def add_images(
 
 @router.get("/query", summary="Query video llama retriever, multi-modal")
 @router.get("/query/", include_in_schema=False)
-async def multi_modal_query(
+async def visual_rag_query(
         prompt: str,
         db_handler: DB_Handler = Depends(get_db_handler)
     ):
 
     try:
-        results = db_handler.multi_modal_retrieval(db_handler.selected_db, VIDEO_LLAMA_TEXT_COLLECTION, VIDEO_LLAMA_IMAGE_COLLECTION, prompt)
+        results = db_handler.visual_rag_retrieval(VIDEO_LLAMA_IMAGE_COLLECTION, prompt)
         # empty page content for better latency
         for item in results:
             item.page_content = ""
@@ -105,7 +106,7 @@ async def multi_modal_query(
 
     return results 
 
-@router.get("/single_modal_query", summary="Query video llama retriever, single-modal")
+@router.get("/single_modal_query", summary="Query video llama retriever, common single-modal")
 @router.get("/single_modal_query/", include_in_schema=False)
 async def single_modal_query(
         prompt: str,

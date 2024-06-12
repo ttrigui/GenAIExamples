@@ -4,19 +4,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from core.db_handler import DB_Handler
-from utils import utilities
+from utils.utilities import get_db_handler
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(levelname)s:    [%(asctime)s] %(message)s',
+    format='%(levelname)s:     [%(asctime)s] %(message)s',
     datefmt='%d/%m/%Y %I:%M:%S'
     )
 
 router = APIRouter(tags=["Basic CRUD operations"])
 
-def get_db_handler():
-    from main import db_handler
-    return db_handler
 
 class Table(BaseModel):
     db_name: str = Field(..., description="Supported: chroma, vdms", example="chroma")
@@ -119,6 +116,7 @@ async def add_images(
 
 @router.post("/update", summary="update")
 @router.post("/update/", include_in_schema=False)
+# @securedRoute
 async def update(
     record: Record, 
     db_handler: DB_Handler = Depends(get_db_handler)

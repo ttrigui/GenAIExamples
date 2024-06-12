@@ -142,8 +142,4 @@ class StreamingResponder:
 
 
 
-# entrypoint = Llama2Deployment.bind(configs["model_path"])
-serve.run(StreamingResponder.bind())
-
-while (True):
-    time.sleep(100)
+entrypoint = Llama2Deployment.bind(configs["model_path"])

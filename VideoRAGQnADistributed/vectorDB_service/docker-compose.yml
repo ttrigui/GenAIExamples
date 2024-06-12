@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   chroma:
     image: chromadb/chroma
@@ -18,11 +17,11 @@ services:
     build:
       context: ./gateway
       cache_from:
-        - vectordb:v1
+        - vectordb:latest
       args:
         HTTP_PROXY: ${http_proxy}
         HTTPS_PROXY: ${https_proxy}
-    image: vectordb:v1
+    image: vectordb:latest
     hostname: vectordb
     container_name: vectordb
     ports:
@@ -32,11 +31,12 @@ services:
       - HTTP_PROXY=${http_proxy}
       - https_proxy=${https_proxy}
       - HTTPS_PROXY=${https_proxy}
+      - VECTORDB_SERVICE_HOST_IP=${VECTORDB_SERVICE_HOST_IP:-10.67.127.18}
     volumes:
       - "./gateway/:/gateway"
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "/home/$USER/.cache/huggingface:/root/.cache/huggingface" # check your cache default path here
+      - "/$USER/.cache/huggingface:/root/.cache/huggingface"
       - vectordb-data:/home/data
     depends_on:
       - chroma

@@ -3,7 +3,7 @@ ARG OS_IMAGE=ubuntu
 
 FROM ${OS_IMAGE}:${OS_VER}
 USER root
-WORKDIR /gateway
+WORKDIR /ui
 
 RUN apt-get update && apt-get install -y software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
@@ -14,13 +14,15 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # avoid installing packages while re-build
-COPY ./requirements.txt /gateway/requirements.txt
+COPY ./ui/requirements.txt requirements.txt
 
-RUN python3.9 -m venv /root/vectorDB
-RUN . /root/vectorDB/bin/activate && \
+RUN python3.9 -m venv /root/frontend
+RUN . /root/frontend/bin/activate && \
     pip install --no-cache-dir -r requirements.txt && \
     deactivate
 
-COPY . /gateway/
+COPY ./ui ./
+COPY ./utils ./utils/
+COPY ./conf ./
 
-ENTRYPOINT ["/root/vectorDB/bin/python3.9","main.py"]
+ENTRYPOINT ["bash", "start_ui.sh"]

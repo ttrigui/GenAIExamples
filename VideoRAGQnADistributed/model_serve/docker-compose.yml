@@ -10,6 +10,11 @@ services:
     container_name: ray_serve
     ports:
       - "8866:8866"
+    environment:
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
     volumes:
       - "./ray_serve/:/ray_serve/"
       - "/etc/timezone:/etc/timezone:ro"
