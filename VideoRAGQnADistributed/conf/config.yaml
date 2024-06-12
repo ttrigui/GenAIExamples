@@ -17,7 +17,7 @@ number_of_frames_per_second: 2
 vector_db:
   choice_of_db: 'chroma' # Supported databases [vdms, chroma]
   # choice_of_db: 'vdms' # Supported databases [vdms, chroma]
-  host: 10.67.127.18
+  host: <your IP>
   port: 9001
   # vectordb microservice urls
   vector_query_url: /visual_rag_retriever/query
@@ -29,8 +29,6 @@ vector_db:
 # LLM path
 model_path: ckpt/llama-2-7b-chat-hf
 model_server:
-  host: 10.67.127.18
+  host: <your IP>
   port: 8866
   url: /generate
-# microservice urls
-model_server_url: https://10.67.127.18:8866/generate

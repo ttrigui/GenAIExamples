@@ -15,20 +15,11 @@ import requests
 from queue import Queue, Empty
 import logging
 
-def set_proxy(addr:str):
-    # for DNS: "http://child-prc.intel.com:913"
-    # for Huggingface downloading: "http://proxy-igk.intel.com:912"
-    os.environ['http_proxy'] = addr
-    os.environ['https_proxy'] = addr
-    os.environ['HTTP_PROXY'] = addr
-    os.environ['HTTPS_PROXY'] = addr
 
 def get_data(api_url:str, query:dict):
     try:
-        set_proxy("http://child-prc.intel.com:913")
         response = requests.get(api_url, query)
         response.raise_for_status()
-        set_proxy("http://proxy-igk.intel.com:912")
         return response.json()
     except requests.exceptions.RequestException as e:
         print(e)
@@ -44,8 +35,6 @@ logging.basicConfig(
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
 
 set_seed(22)
-
-set_proxy("http://proxy-igk.intel.com:912")
 
 if "config" not in st.session_state.keys():
     st.session_state.config = reader.read_config("./config.yaml")
@@ -79,7 +68,6 @@ st.markdown(title_alignment, unsafe_allow_html=True)
 class ModelServerLLM(LLM):
 
     def _call(self, prompt: str, q: Queue):
-        set_proxy("http://child-prc.intel.com:913")
         request_body = {"text": prompt, "config": {}, "stream": True}
         
         response = requests.post(
@@ -93,7 +81,6 @@ class ModelServerLLM(LLM):
                     q.put(text)
         else:
             raise ValueError(f"Failed to get response from model server: {response.status_code}")
-        set_proxy("http://proxy-igk.intel.com:912")
 
     def stream_res(self, prompt):
         q = Queue()
@@ -153,16 +140,6 @@ if "llm" not in st.session_state.keys():
         time.sleep(1)
         st.session_state["llm"] = ModelServerLLM()
 
-# if "vs" not in st.session_state.keys():
-#     with st.spinner("Preparing RAG pipeline"):
-#         time.sleep(1)
-#         host = st.session_state.config["vector_db"]["host"]
-#         port = int(st.session_state.config["vector_db"]["port"])
-#         selected_db = st.session_state.config["vector_db"]["choice_of_db"]
-#         st.session_state["vs"] = db.VS(host, port, selected_db)
-
-#         if st.session_state.vs.client == None:
-#             print("Error while connecting to vector DBs")
 
 # Store LLM generated responses
 if "messages" not in st.session_state.keys():

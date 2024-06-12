@@ -28,12 +28,10 @@ class DB_Handler:
         # initializing important variables
         self.configs = configs
 
-        self.set_proxy("http://proxy-igk.intel.com:912")
         logging.info("Create text embedding model")
         self.text_embedder = SentenceTransformerEmbeddings(model_name=configs['text_embedder'])
         logging.info("Create image embedding model")
         self.image_embedder = OpenCLIPEmbeddings(model_name=configs['image_embedder'], checkpoint=configs['image_checkpoint'])
-        self.set_proxy("")
  
         # both chroma & vdms should be alive and stand by
         # hash map to store the client, db & retiever handshake.
@@ -51,14 +49,6 @@ class DB_Handler:
         # for visual rag
         self.selected_db = "chroma"
         self.update_image_retriever = {"chroma": None,"vdms": None}
-
-    def set_proxy(self, addr:str):
-        # for DNS: "http://child-prc.intel.com:913"
-        # for Huggingface downloading: "http://proxy-igk.intel.com:912"
-        os.environ['http_proxy'] = addr
-        os.environ['https_proxy'] = addr
-        os.environ['HTTP_PROXY'] = addr
-        os.environ['HTTPS_PROXY'] = addr
 
     def save_to_pkl_file(self, filename):
         """
