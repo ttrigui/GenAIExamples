@@ -5,6 +5,9 @@ services:
       context: ./ray_serve
       cache_from:
         - ray_serve:latest
+      args:
+        HTTP_PROXY: ${http_proxy}
+        HTTPS_PROXY: ${https_proxy}
     image: ray_serve:latest
     hostname: ray_serve
     container_name: ray_serve

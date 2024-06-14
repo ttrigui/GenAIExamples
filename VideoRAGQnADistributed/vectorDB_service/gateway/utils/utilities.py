@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import yaml
 from fastapi import Request
 from core.db_handler import DB_Handler

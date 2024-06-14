@@ -25,4 +25,7 @@ COPY ./ui ./
 COPY ./utils ./utils/
 COPY ./conf ./
 
+COPY ./video_ingest/videos /video_ingest/videos/
+COPY ./video_ingest/scene_description /video_ingest/scene_description/
+
 ENTRYPOINT ["bash", "start_ui.sh"]

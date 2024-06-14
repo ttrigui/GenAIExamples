@@ -26,4 +26,7 @@ COPY ./video_ingest/scripts scripts/
 COPY ./utils scripts/utils/
 COPY ./conf scripts/
 
+COPY ./video_ingest/videos videos/
+COPY ./video_ingest/scene_description scene_description/
+
 ENTRYPOINT ["/root/myenv/bin/python3.9","/video_ingest/scripts/generate_store_embeddings.py", "/video_ingest/scripts/config.yaml", "/video_ingest/videos/"]

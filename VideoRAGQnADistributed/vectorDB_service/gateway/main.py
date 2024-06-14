@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from contextlib import asynccontextmanager
 import os
 import subprocess
@@ -13,10 +16,26 @@ from routers import (
 from core.db_handler import DB_Handler
 
 CONFIG_PATH = "/gateway/conf/conf.yaml"
+# persistent flag
+is_persistent = os.getenv("IS_PERSISTENT", "False")
 
-# align /etc/timezone and /etc/localtime
-command = "TZ=`cat /etc/timezone` && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime"
-result = subprocess.run(command, shell=True, capture_output=True, text=True)
+# Read the timezone from /etc/timezone
+timezone_cmd = ["cat", "/etc/timezone"]
+timezone_result = subprocess.run(timezone_cmd, capture_output=True, text=True, check=True)
+
+if timezone_result.returncode == 0:
+    timezone = timezone_result.stdout.strip()
+
+    # Create symbolic link to /etc/localtime
+    ln_cmd = ["ln", "-snf", f"/usr/share/zoneinfo/{timezone}", "/etc/localtime"]
+    ln_result = subprocess.run(ln_cmd, capture_output=True, check=True)
+
+    if ln_result.returncode == 0:
+        print("Timezone set successfully.")
+    else:
+        print("Error setting timezone.")
+else:
+    print("Error reading timezone file.")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,9 +44,10 @@ async def lifespan(app: FastAPI):
     app.state.db_handler = DB_Handler(configs)
 
     # Load the objects from the pickle file
-    handler_pickle_path = configs['handler_pickle_path']
-    if os.path.exists(handler_pickle_path):
-        app.state.db_handler.load_from_pkl_file(handler_pickle_path)
+    if is_persistent == "True":
+        handler_pickle_path = configs['handler_pickle_path']
+        if os.path.exists(handler_pickle_path):
+            app.state.db_handler.load_from_pkl_file(handler_pickle_path)
     
     yield
 

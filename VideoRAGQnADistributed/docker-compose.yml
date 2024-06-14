@@ -9,17 +9,12 @@ services:
     image: video-ingestor:latest
     hostname: video-ingestor
     container_name: video-ingestor
-    ports:
-      - "9005:9005"
     environment:
       - VECTORDB_SERVICE_HOST_IP=${VECTORDB_SERVICE_HOST_IP:-10.67.127.18}
       - CHOICE_OF_DB=${CHOICE_OF_DB:-vdms}
     volumes:
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "./video_ingest/videos:/video_ingest/videos:ro"
-      - "./video_ingest/scene_description:/video_ingest/scene_description:ro"
-      # - "./video_ingest/:/video_ingest" # development
 
   user-interface:
     build:
@@ -41,6 +36,4 @@ services:
     volumes:
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "./video_ingest/videos:/video_ingest/videos:ro"
-      - "./video_ingest/scene_description:/video_ingest/scene_description:ro"
       - "/$USER/.cache/huggingface:/root/.cache/huggingface"

@@ -1,3 +1,6 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import datetime
 import logging
 import os
@@ -20,6 +23,9 @@ logging.basicConfig(
     format='%(levelname)s:     [%(asctime)s] %(message)s',
     datefmt='%d/%m/%Y %I:%M:%S'
     )
+
+# persistent flag
+is_persistent = os.getenv("IS_PERSISTENT", "False")
 
 @singleton
 class DB_Handler:
@@ -81,7 +87,7 @@ class DB_Handler:
 
         :return: None
         """
-        vectordb_service_host_ip: str = os.getenv("VECTORDB_SERVICE_HOST_IP", "0.0.0.0")
+        vectordb_service_host_ip: str = os.getenv("VECTORDB_SERVICE_HOST_IP", "127.0.0.1")
         try:
             logging.info('Connecting to Chroma db server . . .')
             self.client["chroma"] = chromadb.HttpClient(
@@ -164,10 +170,12 @@ class DB_Handler:
                     description="The search kwargs to use",
                 )
             )
-        if db_name == 'chroma':
-            self.save_to_pkl_file(self.configs['handler_pickle_path'])
-        else:
-            pass
+        if is_persistent:
+            if db_name == 'chroma':
+                logging.info("Saving to pickle file . . .")
+                self.save_to_pkl_file(self.configs['handler_pickle_path'])
+            else:
+                pass
             
     def delete_collection(self, db_name:str, table:str):
         self.client[db_name].delete_collection(table)
@@ -229,11 +237,11 @@ class DB_Handler:
     
     def visual_rag_update_db(self, table, prompt, n_images):
         # for visual rag
-        print ('Update DB')
+        print ("Update DB")
 
         base_date = datetime.datetime.today()
         today_date= base_date.date()
-        dates_found =search_dates(prompt, settings={'PREFER_DATES_FROM': 'past', 'RELATIVE_BASE': base_date})
+        dates_found =search_dates(prompt, settings={"PREFER_DATES_FROM": "past", "RELATIVE_BASE": base_date})
         # if no date is detected dates_found should return None
         if dates_found != None:
             # Print the identified dates
@@ -254,91 +262,79 @@ class DB_Handler:
             iso_date_time = parsed_date.isoformat()
             iso_date_time = str(iso_date_time)
 
-            if self.selected_db == 'vdms':
-                if date_string == 'today':
-                    constraints = {"date": [ "==", date_out]} 
-                    self.update_image_retriever['vdms'] = self.image_db['vdms'][table].as_retriever(search_type="mmr", search_kwargs={'k':n_images, "filter":constraints})          
-                elif date_out != str(today_date) and time_out =='00:00:00': ## exact day (example last firday)
-                    constraints = {"date": [ "==", date_out]} 
-                    self.update_image_retriever['vdms'] = self.image_db['vdms'][table].as_retriever(search_type="mmr", search_kwargs={'k':n_images, "filter":constraints}) 
-               
-                elif date_out == str(today_date) and time_out =='00:00:00': ## when search_date interprates words as dates output is todays date + time 00:00:00
-                    self.update_image_retriever['vdms'] = self.image_db['vdms'][table].as_retriever(search_type="mmr", search_kwargs={'k':n_images})    
-                else: ## Interval  of time:last 48 hours, last 2 days,..
-                    constraints = {"date_time": [ ">=", {"_date":iso_date_time}]}                
-                    self.update_image_retriever['vdms'] = self.image_db['vdms'][table].as_retriever(search_type="mmr", search_kwargs={'k':n_images, "filter":constraints})    
-            if self.selected_db == 'chroma':
-                if date_string == 'today':
-                    self.update_image_retriever['chroma'] = self.image_db['chroma'][table].as_retriever(search_type="mmr", search_kwargs={'k':n_images, 'filter': {'date': {'$eq': date_out}}})               
-                elif date_out != str(today_date) and time_out =='00:00:00': ## exact day (example last firday)
-                    self.update_image_retriever['chroma'] = self.image_db['chroma'][table].as_retriever(search_type="mmr", search_kwargs={'k':n_images, 'filter': {'date': {'$eq': date_out}}})                
-                elif date_out == str(today_date) and time_out =='00:00:00': ## when search_date interprates words as dates output is todays date + time 00:00:00
-                    self.update_image_retriever['chroma'] = self.image_db['chroma'][table].as_retriever(search_type="mmr", search_kwargs={'k':n_images})             
-                else: ## Interval  of time:last 48 hours, last 2 days,..
-                    constraints = {"date_time": [ ">=", {"_date":iso_date_time}]}                
-                    self.update_image_retriever['chroma'] = self.image_db['chroma'][table].as_retriever(search_type="mmr", search_kwargs={'filter': {
-                            "$or": [
-                                {
-                                    "$and": [ 
-                                        {
-                                            'date': {
-                                                '$eq': date_out
-                                            }
-                                        },
-                                        {
-                                            "$or": [
-                                                {
-                                                    'hours': {
-                                                        '$gte': hours
-                                                    }
-                                                },
-                                                {
-                                                    "$and": [
-                                                        {
-                                                            'hours': {
-                                                                '$eq': hours
-                                                                }
-                                                        },
-                                                        {
-                                                            'minutes': {
-                                                                '$gte': minutes
-                                                                }
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                                
-                                        }
-                                    ]
-                                },
-                                {
-                                    "$or": [
-                                        {
-                                            'month': {
-                                                '$gt': month
-                                            }
-                                        },
-                                        {
-                                            "$and": [
-                                                {
-                                                    'day': {
-                                                        '$gt': day_out
-                                                    }
-                                                },
-                                                {
-                                                    'month': {
-                                                        '$eq': month
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]   
+            if self.selected_db == "vdms":
+                if date_string == "today":
+                    constraints = {"date": ["==", date_out]}
+                    self.update_image_retriever["vdms"] = self.image_db["vdms"][table].as_retriever(
+                        search_type="mmr", search_kwargs={"k": n_images, "filter": constraints}
+                    )
+                elif date_out != str(today_date) and time_out == "00:00:00":  ## exact day (example last friday)
+                    constraints = {"date": ["==", date_out]}
+                    self.update_image_retriever["vdms"] = self.image_db["vdms"][table].as_retriever(
+                        search_type="mmr", search_kwargs={"k": n_images, "filter": constraints}
+                    )
+                elif (
+                    date_out == str(today_date) and time_out == "00:00:00"
+                ):  ## when search_date interprates words as dates output is todays date + time 00:00:00
+                    self.update_image_retriever["vdms"] = self.image_db["vdms"][table].as_retriever(
+                        search_type="mmr", search_kwargs={"k": n_images}
+                    )
+                else:  ## Interval  of time:last 48 hours, last 2 days,..
+                    constraints = {"date_time": [">=", {"_date": iso_date_time}]}
+                    self.update_image_retriever["vdms"] = self.image_db["vdms"][table].as_retriever(
+                        search_type="mmr", search_kwargs={"k": n_images, "filter": constraints}
+                    )
+            if self.selected_db == "chroma":
+                if date_string == "today":
+                    self.update_image_retriever["chroma"] = self.image_db["chroma"][table].as_retriever(
+                        search_type="mmr", search_kwargs={"k": n_images, "filter": {"date": {"$eq": date_out}}}
+                    )
+                elif date_out != str(today_date) and time_out == "00:00:00":  ## exact day (example last friday)
+                    self.update_image_retriever["chroma"] = self.image_db["chroma"][table].as_retriever(
+                        search_type="mmr", search_kwargs={"k": n_images, "filter": {"date": {"$eq": date_out}}}
+                    )
+                elif (
+                    date_out == str(today_date) and time_out == "00:00:00"
+                ):  ## when search_date interprates words as dates output is todays date + time 00:00:00
+                    self.update_image_retriever["chroma"] = self.image_db["chroma"][table].as_retriever(
+                        search_type="mmr", search_kwargs={"k": n_images}
+                    )
+                else:  ## Interval  of time:last 48 hours, last 2 days,..
+                    constraints = {"date_time": [">=", {"_date": iso_date_time}]}
+                    self.update_image_retriever["chroma"] = self.image_db["chroma"][table].as_retriever(
+                        search_type="mmr",
+                        search_kwargs={
+                            "filter": {
+                                "$or": [
+                                    {
+                                        "$and": [
+                                            {"date": {"$eq": date_out}},
+                                            {
+                                                "$or": [
+                                                    {"hours": {"$gte": hours}},
+                                                    {
+                                                        "$and": [
+                                                            {"hours": {"$eq": hours}},
+                                                            {"minutes": {"$gte": minutes}},
+                                                        ]
+                                                    },
+                                                ]
+                                            },
+                                        ]
+                                    },
+                                    {
+                                        "$or": [
+                                            {"month": {"$gt": month}},
+                                            {"$and": [{"day": {"$gt": day_out}}, {"month": {"$eq": month}}]},
+                                        ]
+                                    },
+                                ]
+                            },
+                            "k": n_images,
                         },
-                        'k':n_images})     
+                    )
         else:
-            self.update_image_retriever[self.selected_db] = self.image_db[self.selected_db][table].as_retriever(search_type="mmr", search_kwargs={'k':n_images}) 
+            self.update_image_retriever[self.selected_db] = self.image_db[self.selected_db][table].as_retriever(search_type="mmr", search_kwargs={"k": n_images})
 
     def visual_rag_retrieval(
             self,
@@ -353,6 +349,6 @@ class DB_Handler:
         image_results = self.update_image_retriever[self.selected_db].invoke(prompt)
 
         for r in image_results:
-            print("images:", r.metadata['video'], '\t',r.metadata['date'], '\t',r.metadata['time'], '\n')
-            
-        return image_results 
+            print("images:", r.metadata["video"], "\t", r.metadata["date"], "\t", r.metadata["time"], "\n")
+
+        return image_results

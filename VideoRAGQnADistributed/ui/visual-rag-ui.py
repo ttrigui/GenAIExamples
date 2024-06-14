@@ -107,20 +107,22 @@ class ModelServerLLM(LLM):
 
 def get_top_doc(results, qcnt):
     hit_score = {}
+    if results == None:
+        return None
     for r in results:
         try:
             video_name = r["metadata"]["video"]
             if video_name not in hit_score.keys():
                 hit_score[video_name] = 0
             hit_score[video_name] += 1
-        except:
-            pass
+        except KeyError as r:
+            logging.info(f"no video name {r}")
 
     x = dict(sorted(hit_score.items(), key=lambda item: -item[1]))
 
     if qcnt >= len(x):
         return None
-    print(f"top docs = {x}")
+    logging.info (f"top docs = {x}")
     return {"video": list(x)[qcnt]}
 
 
@@ -188,7 +190,7 @@ st.sidebar.button("Clear Chat History", on_click=clear_chat_history)
 
 if "prevprompt" not in st.session_state.keys():
     st.session_state["prevprompt"] = ""
-    print("Setting prevprompt to None")
+    logging.info("Setting prevprompt to None")
 if "prompt" not in st.session_state.keys():
     st.session_state["prompt"] = ""
 if "qcnt" not in st.session_state.keys():
