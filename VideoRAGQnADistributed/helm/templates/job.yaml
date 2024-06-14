@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: video-ingestor
+  labels:
+    app: video-ingestor
+spec:
+  template:
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+      - name: reset-flag
+        image: busybox:latest
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["/bin/sh","-c","rm -f /mnt/video-ready"]
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /mnt
+          name: mnt
+          readOnly: false
+      - name: wait-for-db-ready
+        image: curlimages/curl:latest
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["/bin/sh","-c","while [ $(curl -k -sw '%{http_code}' -m 5 'http://{{ .Values.db_service.vectordb_host }}:9001/health' -o /dev/null) -ne 200 ];do echo waiting for vectordb start...;sleep 1s;done"]
+      containers:
+      - name: video-ingestor
+        image: {{ .Values.image.repository }}video-ingestor:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["/bin/sh","-c","/root/myenv/bin/python3.9 /video_ingest/scripts/generate_store_embeddings.py /video_ingest/scripts/config.yaml /video_ingest/videos/ && touch /mnt/video-ready"]
+        env:
+        - name: CHOICE_OF_DB
+          value: {{ .Values.db_service.choice_of_db }}
+        - name: VECTORDB_SERVICE_HOST_IP
+          value: {{ .Values.db_service.vectordb_host }}
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: localtime
+          readOnly: true
+        - mountPath: /etc/timezone
+          name: timezone
+          readOnly: true
+        - mountPath: /mnt
+          name: mnt
+          readOnly: false
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+          type: File
+      - name: timezone
+        hostPath:
+          path: /etc/timezone
+          type: File
+      - name: mnt
+        hostPath:
+          path: /mnt
+          type: DirectoryOrCreate
+      restartPolicy: Never

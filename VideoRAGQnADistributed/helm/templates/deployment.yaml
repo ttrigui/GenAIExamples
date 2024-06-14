@@ -1,0 +1,219 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vectordb
+  labels:
+     app: vectordb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vectordb
+  template:
+    metadata:
+      labels:
+        app: vectordb
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: vectordb-manager
+        image: {{ .Values.image.repository }}vectordb:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 9001
+          hostPort: 9001
+        env:
+        - name: http_proxy
+          value: {{ .Values.proxy.http }}
+        - name: https_proxy
+          value: {{ .Values.proxy.https }}
+        - name: VECTORDB_SERVICE_HOST_IP
+          value: {{ .Values.db_service.vectordb_host }}
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: localtime
+          readOnly: true
+        - mountPath: /etc/timezone
+          name: timezone
+          readOnly: true
+        - mountPath: /root/.cache/huggingface
+          name: huggingface
+        - mountPath: /home/data
+          name: vectordb-data
+      - name: chromadb
+        image: chromadb/chroma:latest
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 8000
+          hostPort: 8000
+        env:
+        - name: ANONYMIZED_TELEMETRY
+          value: "{{ .Values.db_service.chroma.anonymized_telemetry }}"
+        - name: ALLOW_RESET
+          value: "{{ .Values.db_service.chroma.allow_reset }}"
+        - name: IS_PERSISTENT
+          value: "{{ .Values.db_service.chroma.is_persistent }}"
+        - name: PERSIST_DIRECTORY
+          value: {{ .Values.db_service.chroma.persist_directory }}
+        volumeMounts:
+        - mountPath: /chroma/chroma
+          name: chroma-data
+      - name: vdms
+        image: intellabs/vdms:latest
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 55555
+          hostPort: 55555
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+          type: File
+      - name: timezone
+        hostPath:
+          path: /etc/timezone
+          type: File
+      - name: huggingface
+        hostPath: 
+          path: {{ .Values.huggingface.cache_dir }}
+          type: DirectoryOrCreate
+      - name: vectordb-data
+        hostPath:
+          path: /var/data/vectordb
+          type: DirectoryOrCreate
+      - name: chroma-data
+        hostPath:
+          path: /var/data/chroma
+          type: DirectoryOrCreate
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ray-serve
+  labels:
+     app: ray-serve
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ray-serve
+  template:
+    metadata:
+      labels:
+        app: ray-serve
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: ray-serve
+        image: {{ .Values.image.repository }}ray_serve:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 8866
+          hostPort: 8866
+        env:
+        - name: http_proxy
+          value: {{ .Values.proxy.http }}
+        - name: https_proxy
+          value: {{ .Values.proxy.https }}
+        - name: VECTORDB_SERVICE_HOST_IP
+          value: {{ .Values.db_service.vectordb_host }}
+        - name: HUGGINGFACEHUB_API_TOKEN
+          value: {{ .Values.huggingface.api_token }}
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: localtime
+          readOnly: true
+        - mountPath: /etc/timezone
+          name: timezone
+          readOnly: true
+        - mountPath: /ray_serve/llama-2-7b-chat-hf
+          name: llama-2-7b-chat-hf
+          readOnly: true
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+          type: File
+      - name: timezone
+        hostPath:
+          path: /etc/timezone
+          type: File
+      - name: llama-2-7b-chat-hf
+        hostPath:
+          path: /mnt/ckpt/llama-2-7b-chat-hf
+          type: Directory
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-interface
+  labels:
+     app: user-interface
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-interface
+  template:
+    metadata:
+      labels:
+        app: user-interface
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+      - name: wait-video-ingestor
+        image: busybox
+        command: ["sh", "-c", "sleep 10; while [ ! -f /mnt/video-ready ]; do sleep 1; echo waiting for /mnt/video-ready...; done"]
+        volumeMounts:
+        - mountPath: /mnt
+          name: mnt
+          readOnly: true
+      containers:
+      - name: user-interface
+        image: {{ .Values.image.repository }}user-interface:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 50055
+          hostPort: 50055
+        env:
+        - name: http_proxy
+          value: {{ .Values.proxy.http }}
+        - name: https_proxy
+          value: {{ .Values.proxy.https }}
+        - name: VECTORDB_SERVICE_HOST_IP
+          value: {{ .Values.db_service.vectordb_host }}
+        - name: HUGGINGFACEHUB_API_TOKEN
+          value: {{ .Values.huggingface.api_token }}
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: localtime
+          readOnly: true
+        - mountPath: /etc/timezone
+          name: timezone
+          readOnly: true
+        - mountPath: /root/.cache/huggingface
+          name: huggingface
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+          type: File
+      - name: timezone
+        hostPath:
+          path: /etc/timezone
+          type: File
+      - name: huggingface
+        hostPath: 
+          path: {{ .Values.huggingface.cache_dir }}
+          type: DirectoryOrCreate
+      - name: mnt
+        hostPath:
+          path: /mnt
+          type: DirectoryOrCreate

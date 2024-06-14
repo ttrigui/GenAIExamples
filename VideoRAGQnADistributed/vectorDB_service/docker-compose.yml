@@ -32,7 +32,7 @@ services:
       - HTTP_PROXY=${http_proxy}
       - https_proxy=${https_proxy}
       - HTTPS_PROXY=${https_proxy}
-      - VECTORDB_SERVICE_HOST_IP=${VECTORDB_SERVICE_HOST_IP:-10.67.127.18}
+      - VECTORDB_SERVICE_HOST_IP=${VECTORDB_SERVICE_HOST_IP:-127.0.0.1}
     volumes:
       - "./gateway/:/gateway"
       - "/etc/timezone:/etc/timezone:ro"

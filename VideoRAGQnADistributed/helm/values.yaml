@@ -1,0 +1,48 @@
+# Default values for video-rag-qna.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+### Global Configuration ###
+# REGISTRY: "172.16.186.168:20666/"
+# RELEASE: ":latest"
+
+image:
+  repository: ""
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+proxy:
+  http: ""
+  https: ""
+
+db_service:
+  vectordb_host: "<your IP>"
+  choice_of_db: chroma # supported: chroma vdms
+  chroma:
+    anonymized_telemetry: false
+    allow_reset: false
+    is_persistent: false
+    persist_directory: /chroma/chroma
+
+huggingface:
+  api_token: "<your token>"
+  cache_dir: "<your home dir>/.cache/huggingface" # /home/user/.cache/huggingface
+ 
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
