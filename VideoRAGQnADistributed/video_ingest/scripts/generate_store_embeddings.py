@@ -174,8 +174,6 @@ def retrieval_testing():
 if __name__ == "__main__":
     
     update_localtime()
-    command = "TZ=`cat /etc/timezone` && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime"
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
     
     # Create argument parser
     parser = argparse.ArgumentParser(description="Process configuration file for generating and storing embeddings.")
