@@ -32,6 +32,25 @@ logging.basicConfig(
     datefmt="%d/%m/%Y %I:%M:%S"
     )
 
+def update_localtime():
+    # align /etc/timezone and /etc/localtime in container
+    # Read the timezone from /etc/timezone
+    timezone_cmd = ["cat", "/etc/timezone"]
+    timezone_result = subprocess.run(timezone_cmd, capture_output=True, text=True, check=True)
+
+    if timezone_result.returncode == 0:
+        timezone = timezone_result.stdout.strip()
+
+        # Create symbolic link to /etc/localtime
+        ln_cmd = ["ln", "-snf", f"/usr/share/zoneinfo/{timezone}", "/etc/localtime"]
+        ln_result = subprocess.run(ln_cmd, capture_output=True, check=True)
+
+        if ln_result.returncode == 0:
+            logging.info("Timezone set successfully.")
+        else:
+            logging.info("Error setting timezone.")
+    else:
+        logging.info("Error reading timezone file.")
 
 def read_json(path):
     with open(path) as f:
@@ -154,7 +173,7 @@ def retrieval_testing():
     
 if __name__ == "__main__":
     
-    # align /etc/timezone and /etc/localtime in container
+    update_localtime()
     command = "TZ=`cat /etc/timezone` && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime"
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     
