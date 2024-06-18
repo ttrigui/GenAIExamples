@@ -29,7 +29,9 @@ spec:
         - name: https_proxy
           value: {{ .Values.proxy.https }}
         - name: VECTORDB_SERVICE_HOST_IP
-          value: {{ .Values.db_service.vectordb_host }}
+          value: {{ .Values.vectordb.host }}
+        - name: IS_PERSISTENT
+          value: "{{ .Values.vectordb.isPersistent }}"
         volumeMounts:
         - mountPath: /etc/localtime
           name: localtime
@@ -49,13 +51,13 @@ spec:
           hostPort: 8000
         env:
         - name: ANONYMIZED_TELEMETRY
-          value: "{{ .Values.db_service.chroma.anonymized_telemetry }}"
+          value: "{{ .Values.vectordb.chroma.anonymizedTelemetry }}"
         - name: ALLOW_RESET
-          value: "{{ .Values.db_service.chroma.allow_reset }}"
+          value: "{{ .Values.vectordb.chroma.allowReset }}"
         - name: IS_PERSISTENT
-          value: "{{ .Values.db_service.chroma.is_persistent }}"
+          value: "{{ .Values.vectordb.isPersistent }}"
         - name: PERSIST_DIRECTORY
-          value: {{ .Values.db_service.chroma.persist_directory }}
+          value: {{ .Values.vectordb.chroma.persistDirectory }}
         volumeMounts:
         - mountPath: /chroma/chroma
           name: chroma-data
@@ -76,7 +78,7 @@ spec:
           type: File
       - name: huggingface
         hostPath: 
-          path: {{ .Values.huggingface.cache_dir }}
+          path: {{ .Values.huggingface.cacheDir }}
           type: DirectoryOrCreate
       - name: vectordb-data
         hostPath:
@@ -86,6 +88,18 @@ spec:
         hostPath:
           path: /var/data/chroma
           type: DirectoryOrCreate
+{{- if .Values.vectordb.tolerations }}
+      tolerations:
+{{ toYaml .Values.vectordb.tolerations | indent 8 }}
+{{- end }}
+{{- if .Values.vectordb.affinity }}
+      affinity:
+{{ toYaml .Values.vectordb.affinity | indent 8 }}
+{{- end }}
+{{- if .Values.vectordb.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.vectordb.nodeSelector | indent 8 }}
+{{- end }}
 
 ---
 
@@ -120,9 +134,9 @@ spec:
         - name: https_proxy
           value: {{ .Values.proxy.https }}
         - name: VECTORDB_SERVICE_HOST_IP
-          value: {{ .Values.db_service.vectordb_host }}
+          value: {{ .Values.vectordb.host }}
         - name: HUGGINGFACEHUB_API_TOKEN
-          value: {{ .Values.huggingface.api_token }}
+          value: {{ .Values.huggingface.apiToken }}
         volumeMounts:
         - mountPath: /etc/localtime
           name: localtime
@@ -146,6 +160,18 @@ spec:
         hostPath:
           path: /mnt/ckpt/llama-2-7b-chat-hf
           type: Directory
+{{- if .Values.rayServe.tolerations }}
+      tolerations:
+{{ toYaml .Values.rayServe.tolerations | indent 8 }}
+{{- end }}
+{{- if .Values.rayServe.affinity }}
+      affinity:
+{{ toYaml .Values.rayServe.affinity | indent 8 }}
+{{- end }}
+{{- if .Values.rayServe.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.rayServe.nodeSelector | indent 8 }}
+{{- end }}
 
 ---
 
@@ -167,14 +193,13 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: read-job-service-account
       initContainers:
-      - name: wait-video-ingestor
-        image: busybox
-        command: ["sh", "-c", "sleep 10; while [ ! -f /mnt/video-ready ]; do sleep 1; echo waiting for /mnt/video-ready...; done"]
-        volumeMounts:
-        - mountPath: /mnt
-          name: mnt
-          readOnly: true
+      - name: wait-for-video-ingestor
+        image: ghcr.io/groundnuty/k8s-wait-for:v1.6
+        args:
+          - "job"
+          - "video-ingestor"
       containers:
       - name: user-interface
         image: {{ .Values.image.repository }}user-interface:{{ .Values.image.tag }}
@@ -188,9 +213,9 @@ spec:
         - name: https_proxy
           value: {{ .Values.proxy.https }}
         - name: VECTORDB_SERVICE_HOST_IP
-          value: {{ .Values.db_service.vectordb_host }}
+          value: {{ .Values.vectordb.host }}
         - name: HUGGINGFACEHUB_API_TOKEN
-          value: {{ .Values.huggingface.api_token }}
+          value: {{ .Values.huggingface.apiToken }}
         volumeMounts:
         - mountPath: /etc/localtime
           name: localtime
@@ -211,9 +236,17 @@ spec:
           type: File
       - name: huggingface
         hostPath: 
-          path: {{ .Values.huggingface.cache_dir }}
+          path: {{ .Values.huggingface.cacheDir }}
           type: DirectoryOrCreate
-      - name: mnt
-        hostPath:
-          path: /mnt
-          type: DirectoryOrCreate
+{{- if .Values.userInterface.tolerations }}
+      tolerations:
+{{ toYaml .Values.userInterface.tolerations | indent 8 }}
+{{- end }}
+{{- if .Values.userInterface.affinity }}
+      affinity:
+{{ toYaml .Values.userInterface.affinity | indent 8 }}
+{{- end }}
+{{- if .Values.userInterface.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.userInterface.nodeSelector | indent 8 }}
+{{- end }}
