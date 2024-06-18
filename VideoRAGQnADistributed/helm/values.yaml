@@ -17,10 +17,10 @@ proxy:
 huggingface:
   
   ## HuggingFace API token for model downloading
-  api_token: "<your token>"
+  apiToken: "<your token>"
 
   ## HuggingFace model cache directory, could significantly shorten the setup time
-  cache_dir: "<your home dir>/.cache/huggingface" # /home/user/.cache/huggingface
+  cacheDir: "<your home dir>/.cache/huggingface" # /home/user/.cache/huggingface
 
 
 vectordb:
@@ -68,6 +68,8 @@ rayServe:
   ## Node labels for pod assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
   nodeSelector: {}
+  # nodeSelector:
+  #   kubernetes.io/hostname: "<hostname of your IP>" # IP defined in conf/config.yaml model_server.host
 
   ## Tolerations for nodes that have taints on them.
   ## https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -75,19 +77,20 @@ rayServe:
 
   ## Pod scheduling preferences.
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
   ## affinity (encourage ray-serve pods to be collocated with vectordb pods)
-  affinity:
-    podAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-       - weight: 50
-         podAffinityTerm:
-           labelSelector:
-             matchExpressions:
-             - key: app
-               operator: In
-               values:
-                 - vectordb
-           topologyKey: "kubernetes.io/hostname"
+  # affinity:
+  #   podAffinity:
+  #     preferredDuringSchedulingIgnoredDuringExecution:
+  #      - weight: 50
+  #        podAffinityTerm:
+  #          labelSelector:
+  #            matchExpressions:
+  #            - key: app
+  #              operator: In
+  #              values:
+  #                - vectordb
+  #          topologyKey: "kubernetes.io/hostname"
 
 
 userInterface:

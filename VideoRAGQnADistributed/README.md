@@ -123,16 +123,29 @@ docker compose up
 
 Please skip this section if you have run *docker compose up*.
 
-The configs are listed in `VideoRAGQnADistributed/helm/values.yaml`. Please update below fields.
+The configs are listed in `VideoRAGQnADistributed/helm/values.yaml`. Please update below necessary fields and check optional fields in the yaml file.
 
 ```yaml
-db_service:
-  vectordb_host: "192.16.100.100" # IP of vectordb host
-  choice_of_db: chroma # supported: chroma vdms
+vectordb:
+  host: "192.168.100.100" # IP of vectordb host
+  choiceDB: chroma # supported: chroma vdms
 
 huggingface:
-  api_token: "your-api-token"
-  cache_dir: "/home/user/.cache/huggingface" # normally under ~/.cache/huggingface, please use absolute path.
+  apiToken: "your-api-token"
+  cacheDir: "/home/user/.cache/huggingface" # normally under ~/.cache/huggingface, please use absolute path.
+```
+
+If you are using a multi-node cluster, please also define node selector or affinity rules. Force the vectordb and ray-serve to run on the host as the IP speficied. 
+
+```yaml
+vectordb:
+  host: "192.168.100.100"
+  nodeSelector:
+    kubernetes.io/hostname: "host-node1" # host-node1 has IP 192.168.100.100
+rayServe:
+  nodeSelector:
+    kubernetes.io/hostname: "host-node2" # host-node2 has IP defined in conf/config.yaml model_server.host
+
 ```
 
 Mount the model for rag_serve
@@ -149,4 +162,24 @@ Start the service
 helm install videorag helm/
 # stop the service
 helm uninstall videorag
+```
+
+#### Container start up order
+
+```mermaid
+flowchart LR;
+  subgraph first stage
+  vectordb;
+  ray-serve;
+  end
+  
+  subgraph second stage
+  video-ingestor;
+  end
+  
+  subgraph third stage
+  user-interface;
+  end
+
+  vectordb--"db:9001/health ready"-->video-ingestor--"job succeed"-->user-interface;
 ```
