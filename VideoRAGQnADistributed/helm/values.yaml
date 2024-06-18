@@ -1,0 +1,134 @@
+# Default values for video-rag-qna.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: ""
+  # repository: 172.16.186.168:5000/
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+
+proxy:
+  http: ""
+  https: ""
+
+
+huggingface:
+  
+  ## HuggingFace API token for model downloading
+  apiToken: "<your token>"
+
+  ## HuggingFace model cache directory, could significantly shorten the setup time
+  cacheDir: "<your home dir>/.cache/huggingface" # /home/user/.cache/huggingface
+
+
+vectordb:
+  
+  ## IP of the node where runs the vectordb pod
+  host: "<your IP>"
+
+  ## RAG vectorstore choice, supported: chroma vdms
+  choiceDB: chroma
+
+  ## Enable Chroma persistence, load/dump collection and retiever objects to pickle file.
+  isPersistent: false
+
+  ## Chroma environment variables
+  chroma:
+
+    ## Chroma contains a telemetry feature that collects anonymous usage information.
+    ## This feature is disabled by default, otherwise it logs connection warning.
+    anonymizedTelemetry: false
+
+    ## Allow chroma to reset its database.
+    allowReset: false
+
+    ## Chroma data persistence
+    persistDirectory: /chroma/chroma
+  
+  ## Node labels for pod assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+  ## Select the host with IP listed above, or leave blank if the cluster is single node
+  nodeSelector: {}
+  # nodeSelector:
+  #   kubernetes.io/hostname: "<hostname of your IP>"
+
+  ## Tolerations for nodes that have taints on them.
+  ## https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  ## Pod scheduling preferences.
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ## By default we don't set affinity:
+  affinity: {}
+
+
+rayServe:
+  ## Node labels for pod assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+  nodeSelector: {}
+  # nodeSelector:
+  #   kubernetes.io/hostname: "<hostname of your IP>" # IP defined in conf/config.yaml model_server.host
+
+  ## Tolerations for nodes that have taints on them.
+  ## https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  ## Pod scheduling preferences.
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
+  ## affinity (encourage ray-serve pods to be collocated with vectordb pods)
+  # affinity:
+  #   podAffinity:
+  #     preferredDuringSchedulingIgnoredDuringExecution:
+  #      - weight: 50
+  #        podAffinityTerm:
+  #          labelSelector:
+  #            matchExpressions:
+  #            - key: app
+  #              operator: In
+  #              values:
+  #                - vectordb
+  #          topologyKey: "kubernetes.io/hostname"
+
+
+userInterface:
+  ## Node labels for pod assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+  nodeSelector: {}
+
+  ## Tolerations for nodes that have taints on them.
+  ## https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  ## Pod scheduling preferences.
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
+  ## anti-affinity (to encourage UI pods to be isolated with vectordb pods)
+  # affinity:
+  #   podAntiAffinity:
+  #     preferredDuringSchedulingIgnoredDuringExecution:
+  #      - weight: 50
+  #        podAffinityTerm:
+  #          labelSelector:
+  #            matchExpressions:
+  #            - key: app
+  #              operator: In
+  #              values:
+  #                - vectordb
+  #          topologyKey: "kubernetes.io/hostname"
+
+
+videoIngestor:
+  ## Node labels for pod assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+  nodeSelector: {}
+
+  ## Tolerations for nodes that have taints on them.
+  ## https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  ## Pod scheduling preferences.
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
