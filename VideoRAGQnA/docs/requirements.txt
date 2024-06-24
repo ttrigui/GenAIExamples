@@ -19,3 +19,4 @@ decord
 easydict
 omegaconf
 webdataset
+faiss-gpu

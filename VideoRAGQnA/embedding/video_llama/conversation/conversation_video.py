@@ -204,12 +204,16 @@ class Chat:
         self.conv.append_message(self.conv.roles[1], None)
         embs = self.get_context_emb(keep_conv_hist)
         print("chat.answer - input to llama: embs.shape:", embs.shape)
-
+        print("**"*20)
+        print("getting current embedding")
         current_max_len = embs.shape[1] + max_new_tokens
+        
         if current_max_len - max_length > 0:
             print('Warning: The number of tokens in current conversation exceeds the max length. '
                   'The model will not see the contexts outside the range.')
         begin_idx = max(0, current_max_len - max_length)
+        print("**"*20)
+        print("parsing stopwords ... ")
 
         embs = embs[:, begin_idx:]
         if self.conv.sep =="###":
@@ -221,6 +225,8 @@ class Chat:
             stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
 
         # stopping_criteria
+        print("**"*20)
+        print("calling llama_model.generate")
         outputs = self.model.llama_model.generate(
             inputs_embeds=embs,
             max_new_tokens=max_new_tokens,
@@ -234,6 +240,9 @@ class Chat:
             temperature=temperature,
             streamer=streamer
         )
+        print("**"*20)
+        print("done ✅ calling llama_model.generate")
+
         output_token = outputs[0]
         if output_token[0] == 0:  # the model might output a unknow token <unk> at the beginning. remove it
             output_token = output_token[1:]
