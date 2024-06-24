@@ -29,7 +29,6 @@ from embedding.video_llama.conversation.conversation_video import Chat, Conversa
 import decord
 decord.bridge.set_bridge('torch')
 
-#%%
 # imports modules for registration
 from embedding.video_llama.datasets.builders import *
 from embedding.video_llama.models import *
@@ -37,6 +36,7 @@ from embedding.video_llama.processors import *
 from embedding.video_llama.runners import *
 from embedding.video_llama.tasks import *
 
+# Sets the random seed for reproducibility
 set_seed(22)
 
 instructions = [
@@ -67,13 +67,13 @@ instructions = [
     Do not give repetitions, always give distinct and accurate information only."""
 ]
 
-# Embeddings
+# Embeddings - Initializes HuggingFace embedding
 HFembeddings = HuggingFaceEmbeddings()
 
-
-
+# Creates a FAISS vector store from the provided instructions using the embeddings.
 hf_db = FAISS.from_texts(instructions, HFembeddings)
 
+# Retrieves similar contexts from the vector store based on a query.
 def get_context(query, hf_db=hf_db):
     context = hf_db.similarity_search(query)
     return [i.page_content for i in context]
