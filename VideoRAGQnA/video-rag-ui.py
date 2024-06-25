@@ -50,6 +50,7 @@ instructions = [
     
     """Identify the interactions between the man in a blue shirt and items in the provided data. 
     Describe only the nature of his interactions with the items, such as picking up, reading, or moving them. 
+    Exclude assumptions about age, specific items in the scene, or subjective observations. 
     Exclude any information about other individuals or unnecessary scene details. 
     Ensure all information is distinct, accurate, and directly observable.
     """,
