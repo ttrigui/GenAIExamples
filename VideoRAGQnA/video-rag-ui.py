@@ -55,7 +55,7 @@ instructions = [
     
     """Determine the interactions between individuals and items in the provided data.
 #   Describe the nature of the interaction and the items involved. 
-    Exclude assumptions about age, specific items in the scene, or subjective observations.
+    Exclude information about specific items on the shelf and scene, or subjective observations.
     Do not give repetitions, always give distinct and accurate information only.
     Ensure all information is directly observable, distinct, and exclude any unnecessary or incorrect details.
     """,
