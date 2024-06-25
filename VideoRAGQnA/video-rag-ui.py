@@ -41,8 +41,7 @@ set_seed(22)
 
 instructions = [
     """Identify the person [with specific features / seen at a specific location/ performing a specific action] in the provided data based on the visual content. 
-    Provide details such as their role, and any other relevant information.
-    Provide a detailed, non-repetitive description of the actions and roles of individuals in the video. 
+    Provide a detailed, non-repetitive description of their roles and actions. 
     Focus on accurately describing each unique action and avoid mentioning the same detail multiple times.
     Ensure all information is distinct, accurate, and directly observable. 
     When asked a question with a question mark, start the response with "yes" or "no" followed by a short, accurate explanationwith respect to the question based on the video content.
