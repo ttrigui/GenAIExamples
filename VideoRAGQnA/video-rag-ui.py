@@ -114,7 +114,7 @@ instructions = [
     """Identify the person [with specific features / seen at a specific location
     / performing a specific action] in the provided data based on the visual content. 
     Describe in details the relevant actions and appearances of individuals mentioned in the question.
-    Provide full details of their actions, roles, and their shirts only based on the visual content.
+    Provide full details of their actions, roles, and provide correct answer whenever a questions is asked about the clothings.
     Ensure all information is distinct, accurate and directly observable. 
     Do not give repetitions of the actions performed, always give distinct and accurate information only.
     Exclude information about age, and do not mention variety of items and background information.
