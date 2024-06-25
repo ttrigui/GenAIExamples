@@ -49,17 +49,17 @@ instructions = [
     Describe only the relevant actions and appearances of individuals mentioned in the question.
     Exclude assumptions about age, specific items in the scene, or subjective observations.
     Do not give repetitions, always give distinct and accurate information only.
-    Ensure all information is directly observable, distinct, and exclude any unnecessary or incorrect details.
     """,
     
     """Analyze the provided data to recognize and describe the activities performed by individuals.
     Specify the type of activity and any relevant contextual details, 
     Do not give repetitions, always give distinct and accurate information only.""",
     
-    """Identify the interactions between the man in a blue shirt and items in the provided data.
+    """Identify the interactions between individuals and items in the provided data.
     Describe only the nature of his interactions with the items, such as picking up, reading, or moving them. 
-    Exclude any information about other individuals or unnecessary scene details.
-    Ensure all information is distinct, accurate, and directly observable.
+    Exclude assumptions about age, specific items in the scene, or subjective observations.
+    Do not give repetitions, always give distinct and accurate information only.
+    Ensure all information is directly observable, distinct, and exclude any unnecessary or incorrect details.
     """,
     
     """Analyze the provided data to answer queries based on specific time intervals.
