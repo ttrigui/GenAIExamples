@@ -118,7 +118,7 @@ instructions = [
     Exclude information about variety of items and all background information in the video.
     Exclude assumptions about age, specific items in the scene, or subjective observations.
     Provide a detailed, non-repetitive description of the actions and roles of individuals in the video. 
-    Ensure all information is directly observable and distinct.
+    When asked a question with a question mark, start the response with "yes" or "no" followed by a short, accurate explanation
     Do not mention anything about a woman.
     """,
     
