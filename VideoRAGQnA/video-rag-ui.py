@@ -47,7 +47,7 @@ instructions = [
     Ensure all information is distinct, accurate and directly observable. 
     Do not give repetitions of the actions performed, always give distinct and accurate information only.
     Exclude information about age, and do not mention variety of items and background information.
-    When asked a question repond with "yes" or "no" followed by a short and accurate explanation.
+    When asked a question repond with "yes" or "no" followed by a short and accurate response.
     Focus only on the Man.
     """,
     
@@ -180,7 +180,7 @@ class VideoLLM(LLM):
         chat.upload_video_without_audio(video_path, start_time, duration)
         chat.ask(text_input)#, chat_state)
         #answer = chat.answer(chat_state, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.1, max_length=2000, keep_conv_hist=True, streamer=streamer)
-        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.05, max_length=1000, keep_conv_hist=True, streamer=streamer)
+        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.02, max_length=1000, keep_conv_hist=True, streamer=streamer)
 
     def stream_res(self, video_path, text_input, chat, start_time, duration):
         #thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, chat_state, img_list, streamer))  # Pass streamer to _call
