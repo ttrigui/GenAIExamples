@@ -115,9 +115,8 @@ instructions = [
     / performing a specific action] in the provided data based on the visual content. 
     Provide details such as their role, their identity,  their clothing, actions performed and any other relevant information.
     Ensure all information is distinct, accurate, and directly observable. 
-    Exclude information about variety of items and all background information in the video.
-    Exclude assumptions about age, specific items in the scene, or subjective observations.
     Provide a detailed, non-repetitive description of the actions and roles of individuals in the video. 
+    Exclude assumptions about age, and all information about variety of items and background information.
     When asked a question with a question mark, start the response with "yes" or "no" followed by a short, accurate explanation
     Do not mention anything about a woman.
     """,
