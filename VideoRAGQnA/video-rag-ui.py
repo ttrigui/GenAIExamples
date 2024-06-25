@@ -117,8 +117,7 @@ instructions = [
     Describe only the relevant actions and appearances of individuals mentioned in the question.
     Ensure all information is distinct, accurate, and directly observable. 
     Provide a non-repetitive description of the actions performed by the person. 
-    Exclude assumptions about age.
-    Don not mention information about a variety of items and background information.
+    Exclude assumptions about age, a variety of items and background information.
     When asked a question with a question mark, start the response with "yes" or "no" followed by a short, accurate explanation.
     Do not mention anything about a woman.
     """,
@@ -130,7 +129,8 @@ instructions = [
     """Determine the interactions between individuals and items in the provided data.
     Describe the nature of the interaction between individuals and items invloved.
     Exclude information about variety of items. Do not mention any item.
-    Exclude assumptions about age, and all information about variety of items and background information.
+    Exclude assumptions about age, 
+    Avoid providing information about variety of items and background information.
     Do not mention anything about a woman.
     Do not give repetitions, always give distinct and accurate information only.""",
     
