@@ -42,17 +42,25 @@ set_seed(22)
 instructions = [
     """Identify the person [with specific features / seen at a specific location/ performing a specific action] in the provided data based on the visual content. 
     Provide details such as their role, and any other relevant information.
+    Provide a detailed, non-repetitive description of the actions and roles of individuals in the video. 
+    Focus on accurately describing each unique action and avoid mentioning the same detail multiple times.
     Ensure all information is distinct, accurate, and directly observable. 
+    When asked a question with a question mark, start the response with "yes" or "no" followed by a short, accurate explanationwith respect to the question based on the video content.
+    Describe only the relevant actions and appearances of individuals mentioned in the question.
+    Exclude assumptions about age, specific items in the scene, or subjective observations.
     Do not give repetitions, always give distinct and accurate information only.
+    Ensure all information is directly observable, distinct, and exclude any unnecessary or incorrect details.
     """,
     
     """Analyze the provided data to recognize and describe the activities performed by individuals.
     Specify the type of activity and any relevant contextual details, 
     Do not give repetitions, always give distinct and accurate information only.""",
     
-    """Determine the interactions between individuals and items in the provided data.
-    Describe the nature of the interaction and the items involved, 
-    Do not give repetitions, always give distinct and accurate information only.""",
+    """Identify the interactions between the man in a blue shirt and items in the provided data.
+    Describe only the nature of his interactions with the items, such as picking up, reading, or moving them. 
+    Exclude any information about other individuals or unnecessary scene details.
+    Ensure all information is distinct, accurate, and directly observable.
+    """,
     
     """Analyze the provided data to answer queries based on specific time intervals.
     Provide detailed information corresponding to the specified time frames,
@@ -451,8 +459,8 @@ with col1:
             'Man holding red shopping basket',
             'Was there any person wearing a blue shirt seen today?',
             'Was there any person wearing a blue shirt seen in the last 6 hours?',
-            'Was there any person wearing a blue shirt seen last Sunday?',
-            'Was a person wearing glasses seen in the last 30 minutes?',
+            #'Was there any person wearing a blue shirt seen last Sunday?',
+            #'Was a person wearing glasses seen in the last 30 minutes?',
             'Was a person wearing glasses seen in the last 72 hours?',
         ),
         key='example_video'
