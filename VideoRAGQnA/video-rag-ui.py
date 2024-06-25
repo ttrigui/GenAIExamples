@@ -60,7 +60,8 @@ instructions = [
     Do not give repetitions of the actions performed, always give distinct and accurate information only.
     Exclude all information about various items on the shelf. Do not mention any items on the Shelf.
     Exclude assumptions about their age.
-    Avoid providing information about variety of items and background information.
+    Avoid providing information about variety of items on the shelf and background information.
+    Avoid providing repetitive responses.
     Do not mention anything about a woman.
     """,
     
