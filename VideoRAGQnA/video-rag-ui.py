@@ -128,7 +128,7 @@ instructions = [
     
     """Determine the interactions between individuals and items in the provided data.
     Describe the nature of the interaction between individuals and items invloved.
-    Exclude information about variety of items. Do not mention any item.
+    Exclude information about variety of items .Do not mention any item on the Shelf.
     Exclude assumptions about age, 
     Avoid providing information about variety of items and background information.
     Do not mention anything about a woman.
