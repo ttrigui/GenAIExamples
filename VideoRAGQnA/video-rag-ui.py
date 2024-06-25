@@ -40,40 +40,40 @@ from embedding.video_llama.tasks import *
 set_seed(22)
 
 
-instructions = [
-    """Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data. 
-    Provide essential details such as their clothing, actions, and location. 
-    Exclude assumptions about age, specific items in the scene, or subjective observations. 
-    Ensure all information is distinct, accurate, and directly observable.
+# instructions = [
+#     """Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data. 
+#     Provide essential details such as their clothing, actions, and location. 
+#     Exclude assumptions about age, specific items in the scene, or subjective observations. 
+#     Ensure all information is distinct, accurate, and directly observable.
 
-    """,
+#     """,
     
-    """Identify the interactions between the man in a blue shirt and items in the provided data. 
-    Describe only the nature of his interactions with the items, such as picking up, reading, or moving them. 
-    Exclude assumptions about age, specific items in the scene, or subjective observations. 
-    Exclude any information about other individuals or unnecessary scene details. 
-    Ensure all information is distinct, accurate, and directly observable.
-    """,
+#     """Identify the interactions between the man in a blue shirt and items in the provided data. 
+#     Describe only the nature of his interactions with the items, such as picking up, reading, or moving them. 
+#     Exclude assumptions about age, specific items in the scene, or subjective observations. 
+#     Exclude any information about other individuals or unnecessary scene details. 
+#     Ensure all information is distinct, accurate, and directly observable.
+#     """,
     
-    """Provide a detailed, non-repetitive description of the actions and roles of individuals in the video. 
-    Focus on accurately describing each unique action and avoid mentioning the same detail multiple times. 
-    Ensure all information is directly observable and distinct.
+#     """Provide a detailed, non-repetitive description of the actions and roles of individuals in the video. 
+#     Focus on accurately describing each unique action and avoid mentioning the same detail multiple times. 
+#     Ensure all information is directly observable and distinct.
 
-    """,
+#     """,
     
-    """Analyze the provided data to answer queries based on specific time intervals.
-    Provide detailed information corresponding to the specified time frames,
-    Do not give repetitions, always give distinct and accurate information only.""",
+#     """Analyze the provided data to answer queries based on specific time intervals.
+#     Provide detailed information corresponding to the specified time frames,
+#     Do not give repetitions, always give distinct and accurate information only.""",
     
-    """When asked a question with a question mark, start the response with "yes" or "no" followed by a short, accurate explanation based on the video content. 
-    Describe only the relevant actions and appearances of individuals mentioned in the question. 
-    Ensure all information is directly observable, distinct, and exclude any unnecessary or incorrect details.
-    """,
+#     """When asked a question with a question mark, start the response with "yes" or "no" followed by a short, accurate explanation based on the video content. 
+#     Describe only the relevant actions and appearances of individuals mentioned in the question. 
+#     Ensure all information is directly observable, distinct, and exclude any unnecessary or incorrect details.
+#     """,
     
-    """Answer questions related to events and activities that occurred on a specific day or hour of the day.
-    Provide a detailed account of the events,
-    Do not give repetitions, always give distinct and accurate information only."""
-]
+#     """Answer questions related to events and activities that occurred on a specific day or hour of the day.
+#     Provide a detailed account of the events,
+#     Do not give repetitions, always give distinct and accurate information only."""
+# ]
 
 # instructions = [
 #     """Identify the person [with specific features / seen at a specific location/ performing a specific action] in the provided data based on the visual content. 
@@ -110,34 +110,36 @@ instructions = [
 # ]
 
 
-# instructions = [
-#     """Identify the person [with specific features / seen at a specific location
-#     / performing a specific action] in the provided data based on the visual content. 
-#     Provide details such as their role, and any other relevant information.
-#     Ensure all information is distinct, accurate, and directly observable. 
-#     Do not give repetitions, always give distinct and accurate information only.
-#     """,
+instructions = [
+    """Identify the person [with specific features / seen at a specific location
+    / performing a specific action] in the provided data based on the visual content. 
+    Provide details such as their role, and any other relevant information.
+    Ensure all information is distinct, accurate, and directly observable. 
+    Do not give repetitions, always give distinct and accurate information only
+    Exclude assumptions about age, specific items in the scene, or subjective observations..
+    """,
     
-#     """Analyze the provided data to recognize and describe the activities performed by individuals.
-#     Specify the type of activity and any relevant contextual details, 
-#     Do not give repetitions, always give distinct and accurate information only.""",
+    """Analyze the provided data to recognize and describe the activities performed by individuals.
+    Specify the type of activity and any relevant contextual details, 
+    Do not give repetitions, always give distinct and accurate information only.""",
     
-#     """Determine the interactions between individuals and items in the provided data.
-#     Describe the nature of the interaction and the items involved, 
-#     Do not give repetitions, always give distinct and accurate information only.""",
+    """Determine the interactions between individuals and items in the provided data.
+    Describe the nature of the interaction and the items involved, 
+    Exclude information about specific items on the shelf and scene, or subjective observations.
+    Do not give repetitions, always give distinct and accurate information only.""",
     
-#     """Analyze the provided data to answer queries based on specific time intervals.
-#     Provide detailed information corresponding to the specified time frames,
-#     Do not give repetitions, always give distinct and accurate information only.""",
+    """Analyze the provided data to answer queries based on specific time intervals.
+    Provide detailed information corresponding to the specified time frames,
+    Do not give repetitions, always give distinct and accurate information only.""",
     
-#     """Identify individuals based on their appearance as described in the provided data.
-#      Provide details about their identity and actions,
-#      Do not give repetitions, always give distinct and accurate information only.""",
+    """Identify individuals based on their appearance as described in the provided data.
+     Provide details about their identity and actions,
+     Do not give repetitions, always give distinct and accurate information only.""",
     
-#     """Answer questions related to events and activities that occurred on a specific day.
-#     Provide a detailed account of the events,
-#     Do not give repetitions, always give distinct and accurate information only."""
-# ]
+    """Answer questions related to events and activities that occurred on a specific day.
+    Provide a detailed account of the events,
+    Do not give repetitions, always give distinct and accurate information only."""
+]
 
 # Embeddings - Initializes HuggingFace embedding
 HFembeddings = HuggingFaceEmbeddings()
