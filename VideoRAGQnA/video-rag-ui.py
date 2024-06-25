@@ -40,29 +40,25 @@ from embedding.video_llama.tasks import *
 set_seed(22)
 
 instructions = [
-    """Identify the person [with specific features / seen at a specific location
-    / performing a specific action] in the provided data based on the visual content. 
-    Describe in details the relevant actions and appearances of individuals mentioned in the question.
-    Provide full details of their actions, roles, and provide correct answer whenever a questions is asked about the clothings.
-    Ensure all information is distinct, accurate and directly observable. 
-    Do not give repetitions of the actions performed, always give distinct and accurate information only.
-    Exclude information about age, and do not mention variety of items and background information.
-    When asked a question repond with "yes" or "no" followed by a short and accurate response.
-    Focus only on the Man.
+    """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the visual content. 
+    Describe in detail the relevant actions and appearances of the individuals mentioned in the question. 
+    Provide full details of their actions and roles, and give accurate answers regarding their clothing.
+    Ensure all information is distinct, accurate, and directly observable. 
+    Do not repeat actions; provide distinct and accurate information only. 
+    Exclude information about age and background details. 
+    Respond with "yes" or "no" followed by a short and accurate explanation when asked a question. 
+    Do not mention anything about a woman.
     """,
     
     """Analyze the provided data to recognize and describe the activities performed by individuals.
     Specify the type of activity and any relevant contextual details, 
     Do not give repetitions, always give distinct and accurate information only.""",
     
-    """Determine the interactions between individuals and items in the provided data.
-    Describe the nature of the interaction between individuals and items invloved.
-    Do not give repetitions of the actions performed, always give distinct and accurate information only.
-    Exclude all information about various items on the shelf. Do not mention any items on the Shelf.
-    Exclude assumptions about their age.
-    Avoid providing information about variety of items on the shelf and background information.
-    Avoid providing repetitive responses.
-    Focus only on the Man.
+    """Determine the interactions between individuals and items in the provided data. 
+    Describe the nature of the interaction between individuals and the items involved. 
+    Do not repeat actions; always provide distinct and accurate information only. 
+    Exclude information about various items on the shelf, and do not mention any items on the shelf. 
+    Avoid assumptions about age and background details. Do not mention anything about a woman..
     """,
     
     """Analyze the provided data to answer queries based on specific time intervals.
@@ -180,7 +176,7 @@ class VideoLLM(LLM):
         chat.upload_video_without_audio(video_path, start_time, duration)
         chat.ask(text_input)#, chat_state)
         #answer = chat.answer(chat_state, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.1, max_length=2000, keep_conv_hist=True, streamer=streamer)
-        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.02, max_length=1000, keep_conv_hist=True, streamer=streamer)
+        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.01, max_length=1000, keep_conv_hist=True, streamer=streamer)
 
     def stream_res(self, video_path, text_input, chat, start_time, duration):
         #thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, chat_state, img_list, streamer))  # Pass streamer to _call
@@ -432,8 +428,8 @@ with col1:
             'Man holding red shopping basket',
             'Was there any person wearing a blue shirt seen today?',
             'Was there any person wearing a blue shirt seen in the last 6 hours?',
-            #'Was there any person wearing a blue shirt seen last Sunday?',
-            #'Was a person wearing glasses seen in the last 30 minutes?',
+            'Was there any person wearing a blue shirt seen last Sunday?',
+            'Was a person wearing glasses seen in the last 30 minutes?',
             'Was a person wearing glasses seen in the last 72 hours?',
         ),
         key='example_video'
