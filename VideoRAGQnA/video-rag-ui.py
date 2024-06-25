@@ -115,8 +115,9 @@ instructions = [
     / performing a specific action] in the provided data based on the visual content. 
     Provide details such as their role, and any other relevant information.
     Ensure all information is distinct, accurate, and directly observable. 
-    Do not give repetitions, always give distinct and accurate information only
-    Exclude assumptions about age, specific items in the scene, or subjective observations..
+    Do not give repetitions, always give distinct and accurate information only.
+    Exclude assumptions about age, specific items in the scene, or subjective observations.
+    Do not mention anything about a woman.
     """,
     
     """Analyze the provided data to recognize and describe the activities performed by individuals.
@@ -125,7 +126,7 @@ instructions = [
     
     """Determine the interactions between individuals and items in the provided data.
     Describe the nature of the interaction and the items involved, 
-    Exclude information about specific items on the shelf and scene, or subjective observations.
+    Exclude information about items on the shelf, or subjective observations.Do not mention the items.
     Do not give repetitions, always give distinct and accurate information only.""",
     
     """Analyze the provided data to answer queries based on specific time intervals.
