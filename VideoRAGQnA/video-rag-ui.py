@@ -48,7 +48,7 @@ instructions = [
     Do not give repetitions of the actions performed, always give distinct and accurate information only.
     Exclude information about age, and do not mention variety of items and background information.
     When asked a question repond with "yes" or "no" followed by a short and accurate explanation.
-    Do not mention anything about a woman.
+    Focus only on the Man.
     """,
     
     """Analyze the provided data to recognize and describe the activities performed by individuals.
@@ -62,7 +62,7 @@ instructions = [
     Exclude assumptions about their age.
     Avoid providing information about variety of items on the shelf and background information.
     Avoid providing repetitive responses.
-    Do not mention anything about a woman.
+    Focus only on the Man.
     """,
     
     """Analyze the provided data to answer queries based on specific time intervals.
