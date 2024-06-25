@@ -113,11 +113,11 @@ set_seed(22)
 instructions = [
     """Identify the person [with specific features / seen at a specific location
     / performing a specific action] in the provided data based on the visual content. 
+    Describe in details the relevant actions and appearances of individuals mentioned in the question.
     Provide full details of their actions, roles, and their shirts based on the visual content.
-    Describe only the relevant actions and appearances of individuals mentioned in the question.
     Ensure all information is distinct, accurate and directly observable. 
     Do not give repetitions of the actions performed, always give distinct and accurate information only.
-    Exclude assumptions about age, a variety of items and background information.
+    Exclude information about age, and do not mention variety of items and background information.
     When asked a question repond with "yes" or "no" followed by a short and accurate explanation.
     Do not mention anything about a woman.
     """,
