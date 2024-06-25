@@ -113,7 +113,7 @@ set_seed(22)
 instructions = [
     """Identify the person [with specific features / seen at a specific location
     / performing a specific action] in the provided data based on the visual content. 
-    Provide a detailed reponse and details such as their role,  their clothings and the actions performed.
+    Provide a detailed reponse and details such as their role, their shirt only and the actions being performed.
     Ensure all information is distinct, accurate, and directly observable. 
     Provide a non-repetitive description of the actions performed by the person. 
     Exclude assumptions about age, and all information about variety of items and background information.
@@ -128,6 +128,7 @@ instructions = [
     """Determine the interactions between individuals and items in the provided data.
     Describe the nature of the interaction between individuals and items invloved.
     Exclude information about variety of items. Do not mention any item.
+    Exclude assumptions about age, and all information about variety of items and background information.
     Do not give repetitions, always give distinct and accurate information only.""",
     
     """Analyze the provided data to answer queries based on specific time intervals.
@@ -245,7 +246,7 @@ class VideoLLM(LLM):
         chat.upload_video_without_audio(video_path, start_time, duration)
         chat.ask(text_input)#, chat_state)
         #answer = chat.answer(chat_state, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.1, max_length=2000, keep_conv_hist=True, streamer=streamer)
-        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.01, max_length=2000, keep_conv_hist=True, streamer=streamer)
+        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.02, max_length=2000, keep_conv_hist=True, streamer=streamer)
 
     def stream_res(self, video_path, text_input, chat, start_time, duration):
         #thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, chat_state, img_list, streamer))  # Pass streamer to _call
