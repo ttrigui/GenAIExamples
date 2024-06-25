@@ -40,10 +40,10 @@ from embedding.video_llama.tasks import *
 set_seed(22)
 
 instructions = [
-    """Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data. 
-    Provide essential details such as their clothing, actions, and location. 
-    Exclude assumptions about age, specific items in the scene, or subjective observations. 
-    Ensure all information is distinct, accurate, and directly observable.
+    """Identify the person [with specific features / seen at a specific location/ performing a specific action] in the provided data based on the visual content. 
+    Provide details such as their role, and any other relevant information.
+    Ensure all information is distinct, accurate, and directly observable. 
+    Do not give repetitions, always give distinct and accurate information only.
     """,
     
     """Analyze the provided data to recognize and describe the activities performed by individuals.
@@ -70,8 +70,9 @@ instructions = [
 
 # instructions = [
 #     """Identify the person [with specific features / seen at a specific location
-#     / performing a specific action] in the provided data. Provide details such as their
-#     role, and any other relevant information, 
+#     / performing a specific action] in the provided data based on the visual content. 
+#     Provide details such as their role, and any other relevant information.
+#     Ensure all information is distinct, accurate, and directly observable. 
 #     Do not give repetitions, always give distinct and accurate information only.
 #     """,
     
