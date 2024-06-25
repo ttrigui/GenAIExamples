@@ -113,7 +113,7 @@ set_seed(22)
 instructions = [
     """Identify the person [with specific features / seen at a specific location
     / performing a specific action] in the provided data based on the visual content. 
-    Provide full details of their action, role, and their clothings based on the visual content.
+    Provide full details of their actions, roles, and their shirts based on the visual content.
     Describe only the relevant actions and appearances of individuals mentioned in the question.
     Ensure all information is distinct, accurate and directly observable. 
     Provide a non-repetitive description of the actions performed by the person. 
@@ -249,7 +249,7 @@ class VideoLLM(LLM):
         chat.upload_video_without_audio(video_path, start_time, duration)
         chat.ask(text_input)#, chat_state)
         #answer = chat.answer(chat_state, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.1, max_length=2000, keep_conv_hist=True, streamer=streamer)
-        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.02, max_length=2000, keep_conv_hist=True, streamer=streamer)
+        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.01, max_length=2000, keep_conv_hist=True, streamer=streamer)
 
     def stream_res(self, video_path, text_input, chat, start_time, duration):
         #thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, chat_state, img_list, streamer))  # Pass streamer to _call
