@@ -114,7 +114,7 @@ instructions = [
     """Identify the person [with specific features / seen at a specific location
     / performing a specific action] in the provided data based on the visual content. 
     Describe in details the relevant actions and appearances of individuals mentioned in the question.
-    Provide full details of their actions, roles, and their shirts based on the visual content.
+    Provide full details of their actions, roles, and their shirts only based on the visual content.
     Ensure all information is distinct, accurate and directly observable. 
     Do not give repetitions of the actions performed, always give distinct and accurate information only.
     Exclude information about age, and do not mention variety of items and background information.
@@ -128,11 +128,12 @@ instructions = [
     
     """Determine the interactions between individuals and items in the provided data.
     Describe the nature of the interaction between individuals and items invloved.
-    Exclude information about variety of items. Do not mention any items on the Shelf.
+    Do not give repetitions of the actions performed, always give distinct and accurate information only.
+    Exclude all information about various items on the shelf. Do not mention any items on the Shelf.
     Exclude assumptions about their age.
     Avoid providing information about variety of items and background information.
     Do not mention anything about a woman.
-    Do not give repetitions, always give distinct and accurate information only.""",
+    """,
     
     """Analyze the provided data to answer queries based on specific time intervals.
     Provide detailed information corresponding to the specified time frames,
