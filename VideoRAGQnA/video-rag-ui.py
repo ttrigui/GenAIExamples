@@ -116,7 +116,7 @@ instructions = [
     Provide full details of their actions, roles, and their shirts based on the visual content.
     Describe only the relevant actions and appearances of individuals mentioned in the question.
     Ensure all information is distinct, accurate and directly observable. 
-    Provide a non-repetitive description of the actions performed by the person. 
+    Do not give repetitions of the actions performed, always give distinct and accurate information only.
     Exclude assumptions about age, a variety of items and background information.
     When asked a question repond with "yes" or "no" followed by a short and accurate explanation.
     Do not mention anything about a woman.
@@ -128,7 +128,7 @@ instructions = [
     
     """Determine the interactions between individuals and items in the provided data.
     Describe the nature of the interaction between individuals and items invloved.
-    Exclude information about variety of items. Do not mention any item on the Shelf.
+    Exclude information about variety of items. Do not mention any items on the Shelf.
     Exclude assumptions about their age.
     Avoid providing information about variety of items and background information.
     Do not mention anything about a woman.
