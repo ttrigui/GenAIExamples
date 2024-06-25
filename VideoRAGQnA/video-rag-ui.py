@@ -113,9 +113,10 @@ set_seed(22)
 instructions = [
     """Identify the person [with specific features / seen at a specific location
     / performing a specific action] in the provided data based on the visual content. 
-    Provide details of their role, thier actions and their clothings based on the visual content.
+    Provide full details of their action, role, and their clothings based on the visual content.
     Describe only the relevant actions and appearances of individuals mentioned in the question.
-    Ensure all information is distinct, accurate and directly observable.  
+    Ensure all information is distinct, accurate and directly observable. 
+    Provide a non-repetitive description of the actions performed by the person. 
     Exclude assumptions about age, a variety of items and background information.
     When asked a question repond with "yes" or "no" followed by a short and accurate explanation.
     Do not mention anything about a woman.
@@ -127,8 +128,8 @@ instructions = [
     
     """Determine the interactions between individuals and items in the provided data.
     Describe the nature of the interaction between individuals and items invloved.
-    Exclude information about variety of items .Do not mention any item on the Shelf.
-    Exclude assumptions about age, 
+    Exclude information about variety of items. Do not mention any item on the Shelf.
+    Exclude assumptions about their age.
     Avoid providing information about variety of items and background information.
     Do not mention anything about a woman.
     Do not give repetitions, always give distinct and accurate information only.""",
