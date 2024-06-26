@@ -42,7 +42,7 @@ instructions = [
     """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the visual content. 
     Describe in detail the relevant actions and appearances of the individuals mentioned in the question. 
     Provide full details of their actions and roles.
-    Exclude information about their age and items on the shelf which do not exist. 
+    Exclude information about their age, background details and items on the shelf that do not exist. 
     Ensure all information is distinct, accurate, and directly observable. 
     Do not repeat actions. Mention actions only once.
     Do not mention anything about a woman.
