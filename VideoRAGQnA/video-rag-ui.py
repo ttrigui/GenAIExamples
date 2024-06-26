@@ -44,7 +44,7 @@ instructions = [
     Provide full details of their actions and roles.
     Exclude information about their age and items on the shelf which do not exist. 
     Ensure all information is distinct, accurate, and directly observable. 
-    Do not repeat actions. Mention only actions only ones.
+    Do not repeat actions. Mention actions only once.
     Do not mention anything about a woman.
     """,
     
