@@ -152,7 +152,7 @@ class VideoLLAMA(Blip2Base):
 
         logging.info('Loading LLAMA proj')
         self.llama_proj = nn.Linear(
-            self.Qformer.config.hidden_size, 4096 #self.llama_model.config.hidden_size
+            self.Qformer.config.hidden_size, 5120 #self.llama_model.config.hidden_size
         )
         if llama_proj_model:
             print("load llama proj weight: {}".format(llama_proj_model))
@@ -245,7 +245,7 @@ class VideoLLAMA(Blip2Base):
                 layer.output = None
                 layer.intermediate = None
             self.audio_llama_proj = nn.Linear(
-                self.audio_Qformer.config.hidden_size, 4096 #self.llama_model.config.hidden_size
+                self.audio_Qformer.config.hidden_size, 5120 #self.llama_model.config.hidden_size
             )
             self.audio_position_embedding = nn.Embedding(8, self.audio_hidden_size)
 
