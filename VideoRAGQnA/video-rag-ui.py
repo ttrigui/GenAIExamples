@@ -38,14 +38,12 @@ from embedding.video_llama.tasks import *
 
 # Sets the random seed for reproducibility
 set_seed(22)
-
 instructions = [
     """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the visual content. 
     Describe in detail the relevant actions and appearances of the individuals mentioned in the question. 
-    Provide full details of their actions and roles, and give accurate answers regarding their clothing.
+    Provide full details of their actions and roles.
     Ensure all information is distinct, accurate, and directly observable. 
-    Do not repeat actions; provide distinct and accurate information only. 
-    Exclude information about age and background details. 
+    Do not repeat actions.Mention action only ones.
     Respond with "yes" or "no" followed by a short and accurate explanation when asked a question. 
     Do not mention anything about a woman.
     """,
@@ -73,6 +71,42 @@ instructions = [
     Provide a detailed account of the events,
     Do not give repetitions, always give distinct and accurate information only."""
 ]
+
+
+# instructions = [
+#     """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the visual content. 
+#     Describe in detail the relevant actions and appearances of the individuals mentioned in the question. 
+#     Provide full details of their actions and roles, and give accurate answers regarding their clothing.
+#     Ensure all information is distinct, accurate, and directly observable. 
+#     Do not repeat actions; provide distinct and accurate information only. 
+#     Exclude information about age and background details. 
+#     Respond with "yes" or "no" followed by a short and accurate explanation when asked a question. 
+#     Do not mention anything about a woman.
+#     """,
+    
+#     """Analyze the provided data to recognize and describe the activities performed by individuals.
+#     Specify the type of activity and any relevant contextual details, 
+#     Do not give repetitions, always give distinct and accurate information only.""",
+    
+#     """Determine the interactions between individuals and items in the provided data. 
+#     Describe the nature of the interaction between individuals and the items involved. 
+#     Do not repeat actions; always provide distinct and accurate information only. 
+#     Exclude information about various items on the shelf, and do not mention any items on the shelf. 
+#     Avoid assumptions about age and background details. Do not mention anything about a woman..
+#     """,
+    
+#     """Analyze the provided data to answer queries based on specific time intervals.
+#     Provide detailed information corresponding to the specified time frames,
+#     Do not give repetitions, always give distinct and accurate information only.""",
+    
+#     """Identify individuals based on their appearance as described in the provided data.
+#      Provide details about their identity and actions,
+#      Do not give repetitions, always give distinct and accurate information only.""",
+    
+#     """Answer questions related to events and activities that occurred on a specific day.
+#     Provide a detailed account of the events,
+#     Do not give repetitions, always give distinct and accurate information only."""
+# ]
 
 # Embeddings - Initializes HuggingFace embedding
 HFembeddings = HuggingFaceEmbeddings()
@@ -176,7 +210,7 @@ class VideoLLM(LLM):
         chat.upload_video_without_audio(video_path, start_time, duration)
         chat.ask(text_input)#, chat_state)
         #answer = chat.answer(chat_state, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.1, max_length=2000, keep_conv_hist=True, streamer=streamer)
-        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.01, max_length=1000, keep_conv_hist=True, streamer=streamer)
+        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.02, max_length=2000, keep_conv_hist=True, streamer=streamer)
 
     def stream_res(self, video_path, text_input, chat, start_time, duration):
         #thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, chat_state, img_list, streamer))  # Pass streamer to _call
