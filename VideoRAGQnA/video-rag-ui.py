@@ -387,9 +387,9 @@ def handle_message():
                 with col2:
                     play_video(video_name, playback_offset)
                 """
-                scene_des = get_description(video_name)
-                formatted_prompt = ph.get_formatted_prompt(scene=scene_des, prompt=prompt)
-                """
+                # scene_des = get_description(video_name)
+                # formatted_prompt = ph.get_formatted_prompt(scene=scene_des, prompt=prompt)
+                # """
                 
                 full_response = ''
                 full_response = f"Most relevant retrived video is **{video_name}** \n\n"
