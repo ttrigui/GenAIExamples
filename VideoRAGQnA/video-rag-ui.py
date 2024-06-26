@@ -43,8 +43,8 @@ instructions = [
     Describe in detail the relevant actions and appearances of the individuals mentioned in the question. 
     Provide full details of their actions and roles.
     Ensure all information is distinct, accurate, and directly observable. 
-    Do not repeat actions.Mention action only ones.
-    Respond with "yes" or "no" followed by a short and accurate explanation when asked a question. 
+    Do not repeat actions. Mention an action only ones.
+    Exclude information about age.
     Do not mention anything about a woman.
     """,
     
