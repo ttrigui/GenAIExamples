@@ -39,14 +39,13 @@ from embedding.video_llama.tasks import *
 # Sets the random seed for reproducibility
 set_seed(22)
 instructions = [
-    """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the visual content. 
+    """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the video content. 
     Describe in detail the relevant actions and appearances of the individuals mentioned in the question. 
     Provide full details of their actions and roles. Focus on the individual and the action being performed.
-    Exclude information about their age and items on the shelf that do not directly observable. 
+    Exclude information about their age and items on the shelf that are not directly observable. 
     Exclude information about the background and surrounding details.
     Ensure all information is distinct, accurate, and directly observable. 
-    Do not repeat actions. Mention actions only once.
-    Do not mention anything about a woman.
+    Do not repeat actions and Do not mention anything about a woman.
     """,
     
     """Analyze the provided data to recognize and describe the activities performed by individuals.

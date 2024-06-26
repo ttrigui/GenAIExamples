@@ -168,13 +168,14 @@ As an assistant, you need to follow these Rules while answering questions,\
 Rules:\
 - Don't answer any question which are not related to provied video content.\
 - Don't be toxic and don't include harmful information.\
-- Give answer only if you find it in the video conent, otherwise just say You don't have enough information to answer the question.\
+- provide answers only if you find it in the video content, otherwise just say You don't have enough information to answer the question.\
 - Describe in detail the relevant actions and appearances of the individuals mentioned in the question. \
 - Provide full details of their actions and roles. Focus on the individual and the action being performed.\
-- Exclude information about their age and items on the shelf that do not directly observable. \
+- Exclude information about their age and naming items on the shelf that are not observable. \
 - Exclude information about the background and surrounding details.\
 - Ensure all information is distinct, accurate, and directly observable. \
-- Do not repeat actions. Mention actions only once.\
+- Do not repeat actions. \
+- Mention actions only once.\
 \
 Here are the video embeddings:",
     roles=("USER", "ASSISTANT"),
