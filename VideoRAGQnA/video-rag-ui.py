@@ -46,6 +46,7 @@ instructions = [
     Exclude information about the background and surrounding details.
     Ensure all information is distinct, accurate, and directly observable. 
     Do not repeat actions and Do not mention anything about a woman.
+    Mention actions and roles once only.
     """,
     
     """Analyze the provided data to recognize and describe the activities performed by individuals.
