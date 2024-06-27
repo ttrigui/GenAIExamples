@@ -76,41 +76,6 @@ instructions = [
 ]
 
 
-# instructions = [
-#     """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the visual content. 
-#     Describe in detail the relevant actions and appearances of the individuals mentioned in the question. 
-#     Provide full details of their actions and roles, and give accurate answers regarding their clothing.
-#     Ensure all information is distinct, accurate, and directly observable. 
-#     Do not repeat actions; provide distinct and accurate information only. 
-#     Exclude information about age and background details. 
-#     Respond with "yes" or "no" followed by a short and accurate explanation when asked a question. 
-#     Do not mention anything about a woman.
-#     """,
-    
-#     """Analyze the provided data to recognize and describe the activities performed by individuals.
-#     Specify the type of activity and any relevant contextual details, 
-#     Do not give repetitions, always give distinct and accurate information only.""",
-    
-#     """Determine the interactions between individuals and items in the provided data. 
-#     Describe the nature of the interaction between individuals and the items involved. 
-#     Do not repeat actions; always provide distinct and accurate information only. 
-#     Exclude information about various items on the shelf, and do not mention any items on the shelf. 
-#     Avoid assumptions about age and background details. Do not mention anything about a woman..
-#     """,
-    
-#     """Analyze the provided data to answer queries based on specific time intervals.
-#     Provide detailed information corresponding to the specified time frames,
-#     Do not give repetitions, always give distinct and accurate information only.""",
-    
-#     """Identify individuals based on their appearance as described in the provided data.
-#      Provide details about their identity and actions,
-#      Do not give repetitions, always give distinct and accurate information only.""",
-    
-#     """Answer questions related to events and activities that occurred on a specific day.
-#     Provide a detailed account of the events,
-#     Do not give repetitions, always give distinct and accurate information only."""
-# ]
-
 # Embeddings - Initializes HuggingFace embedding
 HFembeddings = HuggingFaceEmbeddings()
 
@@ -281,8 +246,8 @@ class CustomLLM(LLM):
         return "custom"
     
 def get_top_doc(results, qcnt):
-    print("-"*30)
-    print("retrieving videos model")
+    if results == []:
+        return None, None
     hit_score = {}
     for r in results:
         try:
@@ -365,7 +330,7 @@ def RAG(prompt):
     with st.status("Querying database . . . ", expanded=True) as status:
         st.write('Retrieving 3 image docs') #1 text doc and 
         results = st.session_state.vs.MultiModalRetrieval(prompt, top_k = 3) #n_texts = 1, n_images = 3)
-        status.update(label="Retrived Top matching video!", state="complete", expanded=False)
+        status.update(label="Retrieved Top matching video!", state="complete", expanded=False)
     print("---___---")
     print (f'\tRAG prompt={prompt}')
     print("---___---")
@@ -379,14 +344,7 @@ def RAG(prompt):
     print('Video from top doc: ', video_name)
     
     return video_name, playback_offset, top_doc
-
-def get_description(vn):
-    content = None
-    des_path = os.path.join(config['description'], vn + '.txt')
-    with open(des_path, 'r') as file:
-        content = file.read()
-    return content
-    
+   
 st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
 if 'prevprompt' not in st.session_state.keys():
@@ -423,13 +381,9 @@ def handle_message():
             else:
                 with col2:
                     play_video(video_name, playback_offset)
-                # """
-                # scene_des = get_description(video_name)
-                # formatted_prompt = ph.get_formatted_prompt(scene=scene_des, prompt=prompt)
-                # """
-                
+
                 full_response = ''
-                full_response = f"Most relevant retrived video is **{video_name}** \n\n"
+                full_response = f"Most relevant retrieved video is **{video_name}** \n\n"
                 instruction = f"{get_context(prompt)[0]}: {prompt}"
                 #for new_text in st.session_state.llm.stream_res(formatted_prompt):
                 for new_text in st.session_state.llm.stream_res(video_name, instruction, chat, playback_offset, config['clip_duration']):
