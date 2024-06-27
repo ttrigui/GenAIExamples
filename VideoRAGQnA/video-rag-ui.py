@@ -55,9 +55,11 @@ instructions = [
     
     """Determine the interactions between individuals and items in the provided data. 
     Describe the nature of the interaction between individuals and the items involved. 
-    Do not repeat actions; always provide distinct and accurate information only. 
+    Provide full details of their actions and roles. Focus on the individual and the action being performed.
+    Do not repeat actions and Do not mention anything about a woman.
     Exclude information about various items on the shelf, and do not mention any items on the shelf. 
-    Avoid assumptions about age and background details. Do not mention anything about a woman..
+    Avoid assumptions about age and background details. Do not mention anything about a woman.
+    Exclude information about the background and surrounding details.
     """,
     
     """Analyze the provided data to answer queries based on specific time intervals.
