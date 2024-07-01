@@ -12,8 +12,8 @@ from langchain_core.runnables import ConfigurableField
 from dateparser.search import search_dates
 import datetime
 from tzlocal import get_localzone
-from embedding.adaclip_modeling.simple_tokenizer import SimpleTokenizer
-from embedding.adaclip_datasets.preprocess import get_transforms
+from embedding.meanclip_modeling.simple_tokenizer import SimpleTokenizer
+from embedding.meanclip_modeling.preprocess import get_transforms
 from einops import rearrange
 from PIL import Image
 import torch
@@ -24,8 +24,8 @@ import uuid
 #'mobilenet_v3_large', 'mobilenet'
 backbone = 'mobilenet_v3_large'
 
-class AdaCLIPEmbeddings(BaseModel, Embeddings):
-    """AdaCLIP Embeddings model."""
+class MeanCLIPEmbeddings(BaseModel, Embeddings):
+    """MeanCLIP Embeddings model."""
 
     model: Any
     preprocess: Any
@@ -46,7 +46,7 @@ class AdaCLIPEmbeddings(BaseModel, Embeddings):
 
         except ImportError:
             raise ImportError(
-                "Please ensure AdaCLIP model is loaded"
+                "Please ensure CLIP model is loaded"
             )
         return values
 
@@ -95,7 +95,7 @@ class AdaCLIPEmbeddings(BaseModel, Embeddings):
             # Encode the video to get the embeddings
             model_device = next(self.model.parameters()).device
             # Preprocess the video for the model
-            videos_tensor, policy_images_tensor = self.load_video_for_adaclip(vid_path, num_frm=self.model.num_frm,
+            videos_tensor, policy_images_tensor = self.load_video_for_meanclip(vid_path, num_frm=self.model.num_frm,
                                                                               no_policy=not self.model.use_policy,
                                                                               policy_backbone=backbone,
                                                                               max_img_size=224,
@@ -122,7 +122,7 @@ class AdaCLIPEmbeddings(BaseModel, Embeddings):
         return video_features
 
 
-    def load_video_for_adaclip(self, vis_path, num_frm=64, no_policy=False, policy_backbone='mobilenet_v3_large', max_img_size=224, **kwargs):
+    def load_video_for_meanclip(self, vis_path, num_frm=64, no_policy=False, policy_backbone='mobilenet_v3_large', max_img_size=224, **kwargs):
         # Load video with VideoReader
         vr = VideoReader(vis_path, ctx=cpu(0))
         fps = vr.get_avg_fps()
@@ -381,7 +381,7 @@ class VideoVS(VS):
     def __init__(self, host, port, selected_db, video_retriever_model, chosen_video_search_type="similarity"):
         super().__init__(host, port, selected_db)
         self.video_collection = 'video-test'
-        self.video_embedder = AdaCLIPEmbeddings(model=video_retriever_model)
+        self.video_embedder = MeanCLIPEmbeddings(model=video_retriever_model)
         self.chosen_video_search_type = chosen_video_search_type
 
         if self.selected_db == 'chroma':

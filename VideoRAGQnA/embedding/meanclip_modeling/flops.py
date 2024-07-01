@@ -2,7 +2,7 @@ import torch
 import torchvision
 import torch.nn as nn
 from einops import rearrange
-from embedding.adaclip_modeling.clip_model import Transformer
+from embedding.meanclip_modeling.clip_model import Transformer
 
 
 class SamplerFlops(nn.Module):

@@ -19,7 +19,7 @@ from utils import config_reader as reader
 from utils import prompt_handler as ph
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
 from embedding.extract_vl_embedding import VLEmbeddingExtractor as VL
-from embedding.generate_store_embeddings import setup_adaclip_model 
+from embedding.generate_store_embeddings import setup_meanclip_model 
 from embedding.video_llama.common.config import Config
 from embedding.video_llama.common.dist_utils import get_rank
 from embedding.video_llama.common.registry import registry
@@ -44,7 +44,7 @@ config = st.session_state.config
 
 model_path = config['model_path']
 video_dir = config['videos']
-# Read AdaCLIP
+# Read MeanCLIP
 if not os.path.exists(os.path.join(config['meta_output_dir'], "metadata.json")):
     from embedding.generate_store_embeddings import main
     vs = main()
@@ -251,10 +251,10 @@ if 'vs' not in st.session_state.keys():
                 st.session_state['vs'] = db.VS(host, port, selected_db)
             elif config['embeddings']['type'] == "video":
                 import json
-                adaclip_cfg_json = json.load(open(config['adaclip_cfg_path'], 'r'))
-                adaclip_cfg_json["resume"] = config['adaclip_model_path']
-                adaclip_cfg = argparse.Namespace(**adaclip_cfg_json)
-                model, _ = setup_adaclip_model(adaclip_cfg, device="cpu")
+                meanclip_cfg_json = json.load(open(config['meanclip_cfg_path'], 'r'))
+                meanclip_cfg_json["resume"] = config['meanclip_model_path']
+                meanclip_cfg = argparse.Namespace(**meanclip_cfg_json)
+                model, _ = setup_meanclip_model(meanclip_cfg, device="cpu")
                 st.session_state['vs'] = db.VideoVS(host, port, selected_db, model) # FIX THIS LINE
 
         if st.session_state.vs.client == None:

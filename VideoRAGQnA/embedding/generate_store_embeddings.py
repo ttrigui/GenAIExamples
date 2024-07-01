@@ -21,24 +21,24 @@ import os
 import argparse
 import torch
 from langchain_experimental.open_clip import OpenCLIPEmbeddings
-from embedding.adaclip_modeling.model import AdaCLIP
-from embedding.adaclip_modeling.clip_model import CLIP
+from embedding.meanclip_modeling.model import MeanCLIP
+from embedding.meanclip_modeling.clip_model import CLIP
 from utils import config_reader as reader
 from embedding.extract_store_frames import process_all_videos
 from embedding.vector_stores import db
 from decord import VideoReader, cpu
 import numpy as np
 from PIL import Image
-from embedding.adaclip_datasets.preprocess import get_transforms
+from embedding.meanclip_datasets.preprocess import get_transforms
 
 
-def setup_adaclip_model(cfg, device):
+def setup_meanclip_model(cfg, device):
 
     pretrained_state_dict = CLIP.get_config(pretrained_clip_name=cfg.clip_backbone)
     state_dict = {}
     epoch = 0
     if cfg.resume is not None and os.path.exists(cfg.resume):
-        print("Loading AdaCLIP from", cfg.resume)
+        print("Loading MeanCLIP from", cfg.resume)
         checkpoint = torch.load(cfg.resume, map_location="cpu")
         state_dict = checkpoint['state_dict']
         epoch = checkpoint["epoch"]
@@ -67,7 +67,7 @@ def setup_adaclip_model(cfg, device):
                     if num_layer == 4: # for 1-layer transformer sim_header
                         state_dict[key.replace(str(num_layer), "0")] = val.clone()
 
-    model = AdaCLIP(cfg, pretrained_state_dict)
+    model = MeanCLIP(cfg, pretrained_state_dict)
     # use mean aggregation and no_policy if pretrained model weights don't exist
     if cfg.resume is None or not os.path.exists(cfg.resume):
         print("Using Mean Aggregation and no_policy")
@@ -243,10 +243,10 @@ def main():
     args = parser.parse_args()
     # Read configuration file
     config = reader.read_config(args.config_file)
-    # Read AdaCLIP
-    adaclip_cfg_json = json.load(open(config['adaclip_cfg_path'], 'r'))
-    adaclip_cfg_json["resume"] = config['adaclip_model_path']
-    adaclip_cfg = argparse.Namespace(**adaclip_cfg_json)
+    # Read MeanCLIP
+    meanclip_cfg_json = json.load(open(config['meanclip_cfg_path'], 'r'))
+    meanclip_cfg_json["resume"] = config['meanclip_model_path']
+    meanclip_cfg = argparse.Namespace(**meanclip_cfg_json)
 
 
     print ('Config file data \n', yaml.dump(config, default_flow_style=False, sort_keys=False))
@@ -273,8 +273,8 @@ def main():
         model = OpenCLIPEmbeddings(model_name="ViT-g-14", checkpoint="laion2b_s34b_b88k")
 
     elif config['embeddings']['type'] == 'video':
-        # init adaclip model
-        model, _ = setup_adaclip_model(adaclip_cfg, device="cpu")
+        # init meanclip model
+        model, _ = setup_meanclip_model(meanclip_cfg, device="cpu")
         vs = db.VideoVS(host, port, selected_db, model)
     else:
         print(f"ERROR: Selected embedding type in config.yaml {config['embeddings']['type']} is not in [\'video\', \'frame\']")

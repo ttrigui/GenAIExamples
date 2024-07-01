@@ -3,11 +3,11 @@ import torchvision
 import torch.nn as nn
 import torch.nn.functional as F
 
-from embedding.adaclip_modeling import clip
 from einops import rearrange
-from embedding.adaclip_utils.flops_table import feat_dim_dict
-from embedding.adaclip_modeling.clip_model import Transformer
-from embedding.adaclip_modeling.gumbel_softmax import gumbel_softmax_top_k
+from embedding.meanclip_modeling import clip
+from embedding.meanclip_utils.flops_table import feat_dim_dict
+from embedding.meanclip_modeling.clip_model import Transformer
+from embedding.meanclip_modeling.gumbel_softmax import gumbel_softmax_top_k
 
 
 class Sampler(nn.Module):

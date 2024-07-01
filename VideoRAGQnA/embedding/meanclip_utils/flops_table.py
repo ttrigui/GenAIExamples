@@ -2,9 +2,9 @@ import sys
 sys.path.insert(0, "../")
 
 import torch
-from embedding.adaclip_modeling.flops import SamplerFlops
+from embedding.meanclip_modeling.flops import SamplerFlops
 from ptflops import get_model_complexity_info
-from embedding.adaclip_modeling.clip_model import CLIP, build_model
+from embedding.meanclip_modeling.clip_model import CLIP, build_model
 
 
 feat_dim_dict = {

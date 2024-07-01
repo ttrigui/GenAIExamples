@@ -5,11 +5,11 @@ import torch
 import random
 import numpy as np
 from PIL import Image
-from embedding.adaclip_utils.logger import LOGGER
-from embedding.adaclip_modeling.clip import tokenize
+from embedding.meanclip_utils.logger import LOGGER
+from embedding.meanclip_modeling.clip import tokenize
 from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
-from embedding.adaclip_datasets.preprocess import get_transforms
+from embedding.meanclip_datasets.preprocess import get_transforms
 
 
 class BaseDataset(Dataset):

@@ -1,6 +1,6 @@
 from PIL import Image
 from torchvision import transforms
-from embedding.adaclip_modeling.clip import _transform, _convert_image_to_rgb
+from embedding.meanclip_modeling.clip import _transform, _convert_image_to_rgb
 
 try:
     from torchvision.transforms import InterpolationMode

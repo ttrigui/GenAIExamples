@@ -3,16 +3,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from einops import rearrange
-from embedding.adaclip_modeling.sampler import Sampler
-from embedding.adaclip_modeling.transformer import LayerNorm
-from embedding.adaclip_modeling.transformer import Transformer as TransformerClip
-from embedding.adaclip_modeling.clip_model import build_model, QuickGELU, Transformer
+from embedding.meanclip_modeling.sampler import Sampler
+from embedding.meanclip_modeling.transformer import LayerNorm
+from embedding.meanclip_modeling.transformer import Transformer as TransformerClip
+from embedding.meanclip_modeling.clip_model import build_model, QuickGELU, Transformer
 
-from embedding.adaclip_utils.distributed import AllGather
+from embedding.meanclip_utils.distributed import AllGather
 allgather = AllGather.apply
 
 
-class AdaCLIP(nn.Module):
+class MeanCLIP(nn.Module):
     def __init__(self, cfg, clip_state_dict):
         super().__init__()
 
@@ -142,15 +142,15 @@ class AdaCLIP(nn.Module):
         clip_inputs: (B, num_frm, C, H, W)
         policy_inputs: (B, num_frm, C, H, W)
         """
-        print("AdaCLIP.forward() - text_input_ids.shape:", text_input_ids.shape)
-        print("  clip_inputs.shape:", clip_inputs.shape)
-        print("  policy_inputs.shape:", policy_inputs.shape)
+        #print("MeanCLIP.forward() - text_input_ids.shape:", text_input_ids.shape)
+        #print("  clip_inputs.shape:", clip_inputs.shape)
+        #print("  policy_inputs.shape:", policy_inputs.shape)
         frame_embd = self.get_visual_output(clip_inputs)
-        print("  frame_embd.shape after get_visual_output:", frame_embd.shape)
+        #print("  frame_embd.shape after get_visual_output:", frame_embd.shape)
         return_hidden = self.word_agg
         text_embd, word_embd = self.get_text_output(text_input_ids, return_hidden)
-        print("  text_embd.shape after get_text_output:", text_embd.shape)
-        print("  word_embd.shape:", word_embd.shape if word_embd is not None else None)
+        #print("  text_embd.shape after get_text_output:", text_embd.shape)
+        #print("  word_embd.shape:", word_embd.shape if word_embd is not None else None)
 
         text_input_ids = rearrange(text_input_ids, "b n l -> (b n) l")
         lengths = text_input_ids.argmax(dim=-1) + 1
@@ -306,21 +306,21 @@ class AdaCLIP(nn.Module):
         return sims
 
     def mlp_sim_matrix(self, frame_embd, text_embd):
-        print("AdaCLIP.mlp_sim_matrix - text_embd.shape:", text_embd.shape)
-        print("  frame_embd.shape:", frame_embd.shape)
+        #print("MeanCLIP.mlp_sim_matrix - text_embd.shape:", text_embd.shape)
+        #print("  frame_embd.shape:", frame_embd.shape)
         text_embd = rearrange(text_embd, "b n d -> (b n) d")
         text_embd = text_embd / text_embd.norm(dim=-1, keepdim=True)
-        print("  text_embd after rearrange and normalize:", text_embd.shape)
+        #print("  text_embd after rearrange and normalize:", text_embd.shape)
         logits = self.frame_agg_mlp(frame_embd)
-        print("  logits.shape after self.frame_agg_mlp:", logits.shape)
+        #print("  logits.shape after self.frame_agg_mlp:", logits.shape)
         weights = F.softmax(logits / self.frame_agg_temp, dim=1)
-        print("  weights.shape:", weights.shape)
+        #print("  weights.shape:", weights.shape)
         video_embd = (frame_embd * weights).sum(dim=1)
-        print("  video_embd.shape:", video_embd.shape)
+        #print("  video_embd.shape:", video_embd.shape)
         video_embd = video_embd / video_embd.norm(dim=-1, keepdim=True)
-        print("  video_embd after normalize:", video_embd.shape)
+        #print("  video_embd after normalize:", video_embd.shape)
         sims = self.clip.logit_scale.exp() * torch.matmul(text_embd, video_embd.t())
-        print("  sims.shape:", sims.shape)
+        #print("  sims.shape:", sims.shape)
         return sims
 
     def frames_sim_matrix(self, frame_embd, text_embd):
