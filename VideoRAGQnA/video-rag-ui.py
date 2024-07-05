@@ -16,7 +16,6 @@ from langchain_core.callbacks.manager import CallbackManagerForLLMRun
 from langchain.llms.base import LLM
 import threading
 from utils import config_reader as reader
-from utils import prompt_handler as ph
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
 from embedding.extract_vl_embedding import VLEmbeddingExtractor as VL
 from embedding.generate_store_embeddings import setup_meanclip_model 

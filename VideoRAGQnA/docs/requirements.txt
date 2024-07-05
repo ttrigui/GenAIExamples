@@ -1,3 +1,5 @@
+setuptools==69.5.1
+packaging
 chromadb
 opencv-python-headless
 langchain-experimental
