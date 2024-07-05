@@ -13,7 +13,7 @@ from dateparser.search import search_dates
 import datetime
 from tzlocal import get_localzone
 from embedding.meanclip_modeling.simple_tokenizer import SimpleTokenizer
-from embedding.meanclip_modeling.preprocess import get_transforms
+from embedding.meanclip_datasets.preprocess import get_transforms
 from einops import rearrange
 from PIL import Image
 import torch
