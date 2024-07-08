@@ -37,42 +37,31 @@ def setup_meanclip_model(cfg, device):
     pretrained_state_dict = CLIP.get_config(pretrained_clip_name=cfg.clip_backbone)
     state_dict = {}
     epoch = 0
-    if cfg.resume is not None and os.path.exists(cfg.resume):
-        print("Loading MeanCLIP from", cfg.resume)
-        checkpoint = torch.load(cfg.resume, map_location="cpu")
-        state_dict = checkpoint['state_dict']
-        epoch = checkpoint["epoch"]
-    else:
-        print("Loading CLIP pretrained weights ...")
-        for key, val in pretrained_state_dict.items():    
-            new_key = "clip." + key
-            if new_key not in state_dict:
-                state_dict[new_key] = val.clone()
+    print("Loading CLIP pretrained weights ...")
+    for key, val in pretrained_state_dict.items():    
+        new_key = "clip." + key
+        if new_key not in state_dict:
+            state_dict[new_key] = val.clone()
 
-        if cfg.sim_header != "meanP":
-            for key, val in pretrained_state_dict.items():
-                # initialize for the frame and type postion embedding
-                if key == "positional_embedding":
-                    state_dict["frame_position_embeddings.weight"] = val.clone()
+    if cfg.sim_header != "meanP":
+        for key, val in pretrained_state_dict.items():
+            # initialize for the frame and type postion embedding
+            if key == "positional_embedding":
+                state_dict["frame_position_embeddings.weight"] = val.clone()
 
-                # using weight of first 4 layers for initialization
-                if key.find("transformer.resblocks") == 0:
-                    num_layer = int(key.split(".")[2])
+            # using weight of first 4 layers for initialization
+            if key.find("transformer.resblocks") == 0:
+                num_layer = int(key.split(".")[2])
 
-                    # initialize the 4-layer temporal transformer
-                    if num_layer < 4:
-                        state_dict[key.replace("transformer.", "transformerClip.")] = val.clone()
-                        continue
+                # initialize the 4-layer temporal transformer
+                if num_layer < 4:
+                    state_dict[key.replace("transformer.", "transformerClip.")] = val.clone()
+                    continue
 
-                    if num_layer == 4: # for 1-layer transformer sim_header
-                        state_dict[key.replace(str(num_layer), "0")] = val.clone()
+                if num_layer == 4: # for 1-layer transformer sim_header
+                    state_dict[key.replace(str(num_layer), "0")] = val.clone()
 
     model = MeanCLIP(cfg, pretrained_state_dict)
-    # use mean aggregation and no_policy if pretrained model weights don't exist
-    if cfg.resume is None or not os.path.exists(cfg.resume):
-        print("Using Mean Aggregation and no_policy")
-        model.frame_agg = "mean"
-        model.use_policy = False
     missing_keys = []
     unexpected_keys = []
     error_msgs = []
@@ -92,25 +81,8 @@ def setup_meanclip_model(cfg, device):
 
     load(model, prefix='')
 
-    if cfg.debug:
-        print("-" * 20)
-        if len(missing_keys) > 0:
-            print("Weights of {} not initialized from pretrained model: {}"
-                        .format(model.__class__.__name__, "\n   " + "\n   ".join(missing_keys)))
-        if len(unexpected_keys) > 0:
-            print("Weights from pretrained model not used in {}: {}"
-                        .format(model.__class__.__name__, "\n   " + "\n   ".join(unexpected_keys)))
-        if len(error_msgs) > 0:
-            print("Weights from pretrained model cause errors in {}: {}"
-                            .format(model.__class__.__name__, "\n   " + "\n   ".join(error_msgs)))
-
     if str(device) == "cpu":
         model.float()
-
-    if cfg.freeze_clip:
-        model.freeze_clip()
-    if cfg.freeze_cnn and cfg.use_policy:
-        model.sampler.freeze_cnn_backbone()
 
     model.to(device)
 

@@ -251,10 +251,9 @@ if 'vs' not in st.session_state.keys():
             elif config['embeddings']['type'] == "video":
                 import json
                 meanclip_cfg_json = json.load(open(config['meanclip_cfg_path'], 'r'))
-                meanclip_cfg_json["resume"] = config['meanclip_model_path']
                 meanclip_cfg = argparse.Namespace(**meanclip_cfg_json)
                 model, _ = setup_meanclip_model(meanclip_cfg, device="cpu")
-                st.session_state['vs'] = db.VideoVS(host, port, selected_db, model) # FIX THIS LINE
+                st.session_state['vs'] = db.VideoVS(host, port, selected_db, model) 
 
         if st.session_state.vs.client == None:
             print ('Error while connecting to vector DBs')

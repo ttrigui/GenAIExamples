@@ -30,8 +30,7 @@ vector_db:
   host: 0.0.0.0
   port: 55555 #55555 #8000 #
 
-meanclip_cfg_path: embedding/meanclip_config/activitynet_filtered.json
-meanclip_model_path: #embedding/meanclip_weights/activitynet/2024-04-19_13-57-38/trained_model.pth
+meanclip_cfg_path: embedding/meanclip_config/clip_meanAgg.json
 
 # LLM path
 model_path: meta-llama/Llama-2-7b-chat-hf

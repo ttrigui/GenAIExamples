@@ -21,9 +21,6 @@ import uuid
 
 # 'similarity', 'similarity_score_threshold' (needs threshold), 'mmr'
 
-#'mobilenet_v3_large', 'mobilenet'
-backbone = 'mobilenet_v3_large'
-
 class MeanCLIPEmbeddings(BaseModel, Embeddings):
     """MeanCLIP Embeddings model."""
 
@@ -95,24 +92,12 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
             # Encode the video to get the embeddings
             model_device = next(self.model.parameters()).device
             # Preprocess the video for the model
-            videos_tensor, policy_images_tensor = self.load_video_for_meanclip(vid_path, num_frm=self.model.num_frm,
-                                                                              no_policy=not self.model.use_policy,
-                                                                              policy_backbone=backbone,
+            videos_tensor= self.load_video_for_meanclip(vid_path, num_frm=self.model.num_frm,
                                                                               max_img_size=224,
                                                                               start_time=kwargs.get("start_time", None),
                                                                               clip_duration=kwargs.get("clip_duration", None)
                                                                               )
-            embeddings_tensor = self.model.get_video_embeddings(videos_tensor.unsqueeze(0).to(model_device), policy_images_tensor.unsqueeze(0).to(model_device) if policy_images_tensor is not None else None)
-            if "op_24" in vid_path:
-                #print("videos_tensor:", videos_tensor[0,0,:3,:3])
-                #print("video embeddings:", embeddings_tensor.flatten()[:10])
-                text_embd = self.embed_query("man holding red basket")
-                #print(" --> test: ")
-                #print("embeddings_tensor.shape:", embeddings_tensor.shape)
-                #print(" -- __ --> text_embd[0,:3]:", text_embd[:3])
-                #print(" -- __ --> video_embd[0,:3]:", embeddings_tensor[0,:3])
-                #print(" -- __ --> test_matmul[:3*:3]:", torch.matmul(torch.FloatTensor(text_embd[:3]).to(model_device), embeddings_tensor[0,:3].t()))
-                #print(" -- __ --> test_matmul:", torch.matmul(torch.FloatTensor(text_embd).to(model_device), embeddings_tensor.t()))
+            embeddings_tensor = self.model.get_video_embeddings(videos_tensor.unsqueeze(0).to(model_device))
 
             # Convert tensor to list and add to the video_features list
             embeddings_list = embeddings_tensor.squeeze(0).tolist()
@@ -122,7 +107,7 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
         return video_features
 
 
-    def load_video_for_meanclip(self, vis_path, num_frm=64, no_policy=False, policy_backbone='mobilenet_v3_large', max_img_size=224, **kwargs):
+    def load_video_for_meanclip(self, vis_path, num_frm=64, max_img_size=224, **kwargs):
         # Load video with VideoReader
         vr = VideoReader(vis_path, ctx=cpu(0))
         fps = vr.get_avg_fps()
@@ -132,7 +117,6 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
 
         frame_idx = np.linspace(start_idx, end_idx, num=num_frm, endpoint=False, dtype=int) # Uniform sampling
         clip_images = []
-        policy_images = []
 
         # Extract frames as numpy array
         #img_array = vr.get_batch(frame_idx).asnumpy() # img_array = [T,H,W,C]
@@ -150,25 +134,12 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
             #im = clip_imgs[i]
             im = Image.open(f'tmp/img{img_idx+1:03d}.jpeg')
             clip_images.append(clip_preprocess(im)) # 3, 224, 224
-            #if 'op_24' in vis_path:
-            #    print("PIL img:", np.asarray(im)[0,0,:])
-            #    print("clip_preprocessed img:", clip_images[-1][:,0,0])
-            if not no_policy:
-                policy_images.append(get_transforms(policy_backbone, 256)(im))
+
         os.system("rm -r tmp")
         clip_images_tensor = torch.zeros((num_frm,) + clip_images[0].shape)
         clip_images_tensor[:num_frm] = torch.stack(clip_images)
-        #if 'op_24' in vis_path:
-        #    print("op_24 tshape:", clip_images_tensor.shape)
-        #    print("op_24_clip_images_tensor:", clip_images_tensor[0,:,0,0])
-        if policy_images != []:
-            policy_images_tensor = torch.zeros((num_frm,) + policy_images[0].shape)
-            policy_images_tensor[:num_frm] = torch.stack(policy_images)
 
-        if policy_images:
-            return clip_images_tensor, policy_images_tensor
-        else:
-            return clip_images_tensor, None
+        return clip_images_tensor
 
 
 class VS:
