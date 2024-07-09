@@ -217,7 +217,6 @@ def main():
     config = reader.read_config(args.config_file)
     # Read MeanCLIP
     meanclip_cfg_json = json.load(open(config['meanclip_cfg_path'], 'r'))
-    meanclip_cfg_json["resume"] = config['meanclip_model_path']
     meanclip_cfg = argparse.Namespace(**meanclip_cfg_json)
 
 
