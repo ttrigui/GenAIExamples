@@ -1345,8 +1345,6 @@ class VDMS(VectorStore):
                 filter=filter,
                 **kwargs,
             )
-            print("filter:", filter)
-            print("results:", results)
 
         return _results_to_docs_and_scores(results)
 

@@ -106,7 +106,7 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
 
     total_videos = len(GMetadata.keys())
     
-    for _, (video, data) in enumerate(GMetadata.items()):
+    for idx, (video, data) in enumerate(GMetadata.items()):
 
         image_name_list = []
         embedding_list = []
@@ -148,6 +148,7 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
                         'hours': frame_details['hours'],
                         'minutes': frame_details['minutes'],
                         'seconds': frame_details['seconds'],
+                        'hnsw:space': "ip", # Inner Product as distance_key for similarity
                     }
                 image_path = frame_details['frame_path']
                 image_name_list.append(image_path)
@@ -180,9 +181,9 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
                 vs.video_db._collection.add(
                     metadatas=metadata_list,
                     embeddings=tensor,
-                    ids=[f"id{i}" for i in range(len(metadata_list))]
+                    ids=[f"{idx}"]
                 )
-        print (f'✅ {_+1}/{total_videos} video {video}')
+        print (f'✅ {idx+1}/{total_videos} video {video}')
 
 def generate_embeddings(config, embedding_model, vs):
     if not os.path.exists(config['image_output_dir']):
@@ -196,8 +197,8 @@ def generate_embeddings(config, embedding_model, vs):
     store_into_vectordb(vs, global_metadata_file_path, embedding_model, config)
 
 def retrieval_testing(vs):
-    Q = 'man holding red basket'
-    print (f'Testing Query {Q}')
+    Q = 'Man holding red shopping basket'
+    print (f'Testing Query: {Q}')
     results = vs.MultiModalRetrieval(Q)
 
     print(results)
@@ -235,7 +236,7 @@ def main():
     selected_db = config['vector_db']['choice_of_db']
 
     # Creating DB
-    print ('Creating DB with text and image embedding support, \nIt may take few minutes to download and load all required models if you are running for first time.')
+    print ('Creating DB with video embedding and metadata support, \nIt may take few minutes to download and load all required models if you are running for first time.')
     print('Connecting to {} at {}:{}'.format(selected_db, host, port))
 
     if config['embeddings']['type'] == 'frame':

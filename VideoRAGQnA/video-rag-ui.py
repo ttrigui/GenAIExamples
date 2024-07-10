@@ -232,8 +232,8 @@ if 'llm' not in st.session_state.keys():
             print("Loading CustomLLM . . .")
             st.session_state['llm'] = CustomLLM()
         elif config['embeddings']['type'] == "video":
-            st.session_state['llm'] = VideoLLM()
             print("Loading VideoLLM . . .")
+            st.session_state['llm'] = VideoLLM()
         else:
             print("ERROR: line 240")
         

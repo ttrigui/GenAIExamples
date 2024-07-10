@@ -142,26 +142,21 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
         return clip_images_tensor
 
 
-class VS:
-
-    def __init__(self, host, port, selected_db, chosen_video_search_type = "mmr"):
+class VideoVS:
+    def __init__(self, host, port, selected_db, video_retriever_model, chosen_video_search_type="similarity"):
         self.host = host
         self.port = port
         self.selected_db = selected_db
         self.chosen_video_search_type = chosen_video_search_type
         self.constraints = None
-
-        # initializing important variables
-        self.client = None
-        self.image_db = None
-        self.image_embedder = OpenCLIPEmbeddings(model_name="ViT-g-14", checkpoint="laion2b_s34b_b88k")
-        self.image_collection = 'image-test'
-        self.text_retriever = None
-        self.image_retriever = None
+        self.video_collection = 'video-test'
+        self.video_embedder = MeanCLIPEmbeddings(model=video_retriever_model)
+        self.chosen_video_search_type = chosen_video_search_type
 
         # initialize_db
         self.get_db_client()
         self.init_db()
+
 
     def get_db_client(self):
 
@@ -172,31 +167,25 @@ class VS:
         if self.selected_db == 'vdms':
             print ('Connecting to VDMS db server . . .')
             self.client = VDMS_Client(host=self.host, port=self.port)
+        print("self.client:", self.client)
 
     def init_db(self):
         print ('Loading db instances')
-        if self.selected_db ==  'chroma':
-            self.image_db = Chroma(
-                client = self.client,
-                embedding_function = self.image_embedder,
-                collection_name = self.image_collection,
+        if self.selected_db == 'chroma':
+            self.video_db = Chroma(
+                client=self.client,
+                embedding_function=self.video_embedder,
+                collection_name=self.video_collection,
+                collection_metadata={"hnsw:space": "ip"}
             )
-
-        if self.selected_db == 'vdms':
-            self.image_db = VDMS (
-                client = self.client,
-                embedding = self.image_embedder,
-                collection_name = self.image_collection,
-                engine = "FaissFlat",
+        elif self.selected_db == 'vdms':
+            self.video_db = VDMS(
+                client=self.client,
+                embedding=self.video_embedder,
+                collection_name=self.video_collection,
+                engine="FaissFlat",
+                distance_strategy="IP"
             )
-
-        self.image_retriever = self.image_db.as_retriever(search_type=self.chosen_video_search_type).configurable_fields(
-            search_kwargs=ConfigurableField(
-                id="k_image_docs",
-                name="Search Kwargs",
-                description="The search kwargs to use",
-            )
-        )
 
 
     def update_db(self, prompt, n_images):
@@ -228,26 +217,26 @@ class VS:
             if self.selected_db == 'vdms':
                 if date_string == 'today':
                     self.constraints = {"date": [ "==", date_out]}
-                    self.update_image_retriever = self.image_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, "filter":self.constraints})
+                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, "filter":self.constraints})
                 elif date_out != str(today_date) and time_out =='00:00:00': ## exact day (example last firday)
                     self.constraints = {"date": [ "==", date_out]}
-                    self.update_image_retriever = self.image_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, "filter":self.constraints})
+                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, "filter":self.constraints})
 
                 elif date_out == str(today_date) and time_out =='00:00:00': ## when search_date interprates words as dates output is todays date + time 00:00:00
-                    self.update_image_retriever = self.image_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
+                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
                 else: ## Interval  of time:last 48 hours, last 2 days,..
                     self.constraints = {"date_time": [ ">=", {"_date":iso_date_time}]}
-                    self.update_image_retriever = self.image_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, "filter":self.constraints})
+                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, "filter":self.constraints})
             if self.selected_db == 'chroma':
                 if date_string == 'today':
-                    self.update_image_retriever = self.image_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': {'date': {'$eq': date_out}}})
+                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': {'date': {'$eq': date_out}}})
                 elif date_out != str(today_date) and time_out =='00:00:00': ## exact day (example last firday)
-                    self.update_image_retriever = self.image_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': {'date': {'$eq': date_out}}})
+                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': {'date': {'$eq': date_out}}})
                 elif date_out == str(today_date) and time_out =='00:00:00': ## when search_date interprates words as dates output is todays date + time 00:00:00
-                    self.update_image_retriever = self.image_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
+                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
                 else: ## Interval  of time:last 48 hours, last 2 days,..
                     self.constraints = {"date_time": [ ">=", {"_date":iso_date_time}]}
-                    self.update_image_retriever = self.image_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'filter': {
+                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'filter': {
                             "$or": [
                                 {
                                     "$and": [
@@ -309,75 +298,7 @@ class VS:
                         },
                         'k':n_images})
         else:
-            self.update_image_retriever = self.image_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
-
-    def length(self):
-        if self.selected_db == 'chroma':
-            images = self.image_db.__len__()
-            return (texts, images)
-
-        if self.selected_db == 'vdms':
-            pass
-
-        return (None, None)
-
-    def delete_collection(self, collection_name):
-        self.client.delete_collection(collection_name=collection_name)
-
-    def add_images(
-            self,
-            uris: List[str],
-            metadatas: Optional[List[dict]] = None,
-        ):
-
-        self.image_db.add_images(uris, metadatas)
-
-
-    def MultiModalRetrieval(
-            self,
-            query: str,
-            top_k: Optional[int] = 3,
-        ):
-
-        self.update_db(query, top_k)
-        image_results = self.update_image_retriever.invoke(query)
-
-        for r in image_results:
-            print("images:", r.metadata['video'], '\t',r.metadata['date'], '\t',r.metadata['time'], '\n')
-
-        return image_results
-
-
-class VideoVS(VS):
-    def __init__(self, host, port, selected_db, video_retriever_model, chosen_video_search_type="similarity"):
-        super().__init__(host, port, selected_db)
-        self.video_collection = 'video-test'
-        self.video_embedder = MeanCLIPEmbeddings(model=video_retriever_model)
-        self.chosen_video_search_type = chosen_video_search_type
-
-        if self.selected_db == 'chroma':
-            self.video_db = Chroma(
-                client=self.client,
-                embedding_function=self.video_embedder,
-                collection_name=self.video_collection,
-            )
-        elif self.selected_db == 'vdms':
-            self.video_db = VDMS(
-                client=self.client,
-                embedding=self.video_embedder,
-                collection_name=self.video_collection,
-                engine="FaissFlat",
-                distance_strategy="IP"
-            )
-
-       #self.video_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type).configurable_fields(
-       #     search_kwargs=ConfigurableField(
-       #         id="k_video_docs",
-       #         name="Search Kwargs",
-       #         description="The search kwargs to use",
-       #     )
-       # )
-
+            self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
     
     def MultiModalRetrieval(self, query: str, top_k: Optional[int] = 3):
         self.update_db(query, top_k)
