@@ -161,12 +161,7 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
         print (f'✅ {idx+1}/{total_videos} video {video}')
 
 def generate_embeddings(config, embedding_model, vs):
-    if not os.path.exists(config['image_output_dir']):
-        print ('Processing all videos, Generated frames will be stored at')
-        print (f'input video folder = {config["videos"]}')
-        print (f'frames output folder = {config["image_output_dir"]}')
-        print (f'metadata files output folder = {config["meta_output_dir"]}')
-        process_all_videos(config)
+    process_all_videos(config)
     global_metadata_file_path = os.path.join(config["meta_output_dir"], 'metadata.json')
     print(f'global metadata file available at {global_metadata_file_path}')
     store_into_vectordb(vs, global_metadata_file_path, embedding_model, config)
@@ -201,7 +196,6 @@ def main():
     generate_frames = config['generate_frames']
     #embed_frames = config['embed_frames']
     path = config['videos'] #args.videos_folder #
-    image_output_dir = config['image_output_dir']
     meta_output_dir = config['meta_output_dir']
     N = config['number_of_frames_per_second']
     emb_path = config['embeddings']['path']

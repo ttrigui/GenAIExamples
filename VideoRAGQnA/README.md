@@ -76,18 +76,7 @@ cd ../..
 ```
 
 
-The current framework supports both Chroma DB and Intel's VDMS.
-We tested using VDMS only after video embedding based modification.
-
-Running Chroma DB as docker container
-```bash
-docker run -d -p 8000:8000 chromadb/chroma
-```
-**Troubleshooting:** If using chromadb, and getting this error ```ValueError: Could not connect to tenant default_tenant```, then: 
-```bash
-export no_proxy="0.0.0.0"
-```
-**or**
+The current framework supports Intel's VDMS.
 
 Running VDMS DB as docker container
 ```bash
