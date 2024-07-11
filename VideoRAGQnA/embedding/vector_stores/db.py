@@ -1,4 +1,3 @@
-import chromadb
 from langchain_community.vectorstores import VDMS
 from langchain_community.vectorstores.vdms import VDMS_Client
 from langchain_experimental.open_clip import OpenCLIPEmbeddings
@@ -6,7 +5,6 @@ from langchain.pydantic_v1 import BaseModel, root_validator
 from langchain_core.embeddings import Embeddings
 from decord import VideoReader, cpu
 import numpy as np
-from langchain_community.vectorstores import Chroma
 from typing import List, Optional, Iterable, Dict, Any
 from langchain_core.runnables import ConfigurableField
 from dateparser.search import search_dates
@@ -160,10 +158,6 @@ class VideoVS:
 
     def get_db_client(self):
 
-        if self.selected_db == 'chroma':
-            print (f'Connecting to Chroma db server . . . host:{self.host}, port:{self.port}')
-            self.client = chromadb.HttpClient(host=self.host, port=self.port)
-
         if self.selected_db == 'vdms':
             print ('Connecting to VDMS db server . . .')
             self.client = VDMS_Client(host=self.host, port=self.port)
@@ -171,14 +165,7 @@ class VideoVS:
 
     def init_db(self):
         print ('Loading db instances')
-        if self.selected_db == 'chroma':
-            self.video_db = Chroma(
-                client=self.client,
-                embedding_function=self.video_embedder,
-                collection_name=self.video_collection,
-                collection_metadata={"hnsw:space": "ip"}
-            )
-        elif self.selected_db == 'vdms':
+        if self.selected_db == 'vdms':
             self.video_db = VDMS(
                 client=self.client,
                 embedding=self.video_embedder,
@@ -227,78 +214,7 @@ class VideoVS:
                 else: ## Interval  of time:last 48 hours, last 2 days,..
                     self.constraints = {"date_time": [ ">=", {"_date":iso_date_time}]}
                     self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, "filter":self.constraints})
-            if self.selected_db == 'chroma':
-                if date_string == 'today':
-                    self.constraints = {'date': {'$eq': date_out}}
-                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': self.constraints})
-                elif date_out != str(today_date) and time_out =='00:00:00': ## exact day (example last firday)
-                    self.constraints = {'date': {'$eq': date_out}}
-                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': self.constraints})
-                elif date_out == str(today_date) and time_out =='00:00:00': ## when search_date interprates words as dates output is todays date + time 00:00:00
-                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
-                else: ## Interval  of time:last 48 hours, last 2 days,..
-                    self.constraints = {
-                            "$or": [
-                                {
-                                    "$and": [
-                                        {
-                                            'date': {
-                                                '$eq': date_out
-                                            }
-                                        },
-                                        {
-                                            "$or": [
-                                                {
-                                                    'hours': {
-                                                        '$gte': hours
-                                                    }
-                                                },
-                                                {
-                                                    "$and": [
-                                                        {
-                                                            'hours': {
-                                                                '$eq': hours
-                                                                }
-                                                        },
-                                                        {
-                                                            'minutes': {
-                                                                '$gte': minutes
-                                                                }
-                                                        }
-                                                    ]
-                                                }
-                                            ]
 
-                                        }
-                                    ]
-                                },
-                                {
-                                    "$or": [
-                                        {
-                                            'month': {
-                                                '$gt': month
-                                            }
-                                        },
-                                        {
-                                            "$and": [
-                                                {
-                                                    'day': {
-                                                        '$gt': day_out
-                                                    }
-                                                },
-                                                {
-                                                    'month': {
-                                                        '$eq': month
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': self.constraints
-                        })
         else:
             self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
     

@@ -15,7 +15,6 @@ VECTORDB_SERVICE_HOST_IP = os.getenv("VECTORDB_SERVICE_HOST_IP", "0.0.0.0")
 # sys.path.append(os.path.abspath('../utils'))
 # import config_reader as reader
 import yaml
-import chromadb
 import json
 import os
 import argparse
@@ -134,22 +133,7 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
                         'minutes': frame_details['minutes'],
                         'seconds': frame_details['seconds'],
                     }
-                if vs.selected_db == 'chroma':
-                    meta_data = {
-                        'timestamp': frame_details['timestamp'],
-                        'frame_path': frame_details['frame_path'],
-                        'video': video,
-                        #'embedding_path': data['embedding_path'],
-                        'date': frame_details['date'],
-                        'year': frame_details['year'],
-                        'month': frame_details['month'],
-                        'day': frame_details['day'],
-                        'time': frame_details['time'],
-                        'hours': frame_details['hours'],
-                        'minutes': frame_details['minutes'],
-                        'seconds': frame_details['seconds'],
-                        'hnsw:space': "ip", # Inner Product as distance_key for similarity
-                    }
+
                 image_path = frame_details['frame_path']
                 image_name_list.append(image_path)
 
@@ -172,19 +156,8 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
                     start_time=[data['timestamp']],
                     clip_duration=[data['clip_duration']]
                 )
-            elif vs.selected_db == 'chroma':
-                # Call local embedding function to retrieve tensor
-                tensor = vs.video_embedder.embed_video(paths=video_name_list,
-                    metadatas=metadata_list,
-                    start_time=[data['timestamp']],
-                    clip_duration=[data['clip_duration']])
-                vs.video_db._collection.add(
-                    metadatas=metadata_list,
-                    embeddings=tensor,
-                    ids=[f"{idx}"]
-                )
             else:
-                print(f"ERROR: selected_db {vs.selected_db} not supported. Supported:[vdms, chroma]")
+                print(f"ERROR: selected_db {vs.selected_db} not supported. Supported:[vdms]")
         print (f'✅ {idx+1}/{total_videos} video {video}')
 
 def generate_embeddings(config, embedding_model, vs):
