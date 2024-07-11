@@ -106,7 +106,8 @@ def _results_to_docs_and_scores(results: Any) -> List[Tuple[Document, float]]:
                     (Document(page_content=txt_contents, metadata=props), distance)
                 )
     except:
-        print("ERROR while parsing the results:", results)
+        pass
+        #print("ERROR while parsing the results:", results)
     return final_res
 
 

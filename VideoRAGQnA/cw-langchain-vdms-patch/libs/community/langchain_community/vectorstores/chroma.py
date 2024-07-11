@@ -51,7 +51,8 @@ def _results_to_docs_and_scores(results: Any) -> List[Tuple[Document, float]]:
         ]
 
     except:
-        print("ERROR while parsing the results:", results)
+        pass
+        #print("ERROR while parsing the results:", results)
     return []
 
 class Chroma(VectorStore):

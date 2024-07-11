@@ -176,7 +176,7 @@ class VideoVS:
 
 
     def update_db(self, prompt, n_images):
-        print ('Update DB')
+        #print ('Update DB')
 
         base_date = datetime.datetime.today()
         today_date= base_date.date()
@@ -187,7 +187,7 @@ class VideoVS:
             # print("dates_found:",dates_found)
             for date_tuple in dates_found:
                 date_string, parsed_date = date_tuple
-                print(f"Found date: {date_string} -> Parsed as: {parsed_date}")
+                #print(f"Found date: {date_string} -> Parsed as: {parsed_date}")
                 date_out = str(parsed_date.date())
                 time_out = str(parsed_date.time())
                 hours, minutes, seconds = map(float, time_out.split(":"))
@@ -222,7 +222,7 @@ class VideoVS:
         self.update_db(query, top_k)
         #video_results = self.video_retriever.invoke(query)
         video_results = self.video_db.similarity_search_with_score(query=query, k=top_k, filter=self.constraints)
-        for r, score in video_results:
-            print("videos:", r.metadata['video_path'], '\t', r.metadata['date'], '\t', r.metadata['time'], r.metadata['timestamp'], f"score: {score}", r, '\n')
+        #for r, score in video_results:
+        #    print("videos:", r.metadata['video_path'], '\t', r.metadata['date'], '\t', r.metadata['time'], r.metadata['timestamp'], f"score: {score}", r, '\n')
 
         return video_results

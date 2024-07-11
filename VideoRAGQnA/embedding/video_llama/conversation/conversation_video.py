@@ -160,13 +160,13 @@ conv_llava_llama_2 = Conversation(
     #       "and assist the user with a variety of tasks using natural language.",
     system="You are Intel's RAG assistant who understands visual and textual content. \
     You will be provided with two things, video embeddings and user's RAG prompt. \
-    You are suppose to understand video content from the video embeddings \
+    You are supposed to understand video content from the video embeddings \
 and provide answer to user's question. \
 \
 As an assistant, you need to follow these Rules while answering questions,\
 \
 Rules:\
-- Don't answer any question which are not related to provied video content.\
+- Don't answer any question which is not related to provied video content.\
 - Don't be toxic and don't include harmful information.\
 - Give answer only if you find it in the video conent, otherwise just say You don't have enough information to answer the question.\
 \
@@ -203,12 +203,12 @@ class Chat:
                repetition_penalty=1.0, length_penalty=1, temperature=1.0, max_length=2000, keep_conv_hist=True, streamer=None):
         self.conv.append_message(self.conv.roles[1], None)
         embs = self.get_context_emb(keep_conv_hist)
-        print("chat.answer - input to llama: embs.shape:", embs.shape)
+        #print("chat.answer - input to llama: embs.shape:", embs.shape)
 
         current_max_len = embs.shape[1] + max_new_tokens
         if current_max_len - max_length > 0:
-            print('Warning: The number of tokens in current conversation exceeds the max length. '
-                  'The model will not see the contexts outside the range.')
+            #print('Warning: The number of tokens in current conversation exceeds the max length. '
+            #      'The model will not see the contexts outside the range.')
         begin_idx = max(0, current_max_len - max_length)
 
         embs = embs[:, begin_idx:]
@@ -247,8 +247,8 @@ class Chat:
             output_text = output_text.split(self.conv.sep2)[0]  # remove the stop sign '###'
             output_text = output_text.split(self.conv.roles[1]+':')[-1].strip()
         self.conv.messages[-1][1] = output_text
-        print("chat.answer - llama output_text:", output_text)
-        print("chat.answer - llama output_token.cpu().numpy().shape:", output_token.cpu().numpy().shape)
+        #print("chat.answer - llama output_text:", output_text)
+        #print("chat.answer - llama output_token.cpu().numpy().shape:", output_token.cpu().numpy().shape)
         return output_text, output_token.cpu().numpy()
     
     def upload_video(self, video_path):
@@ -256,7 +256,7 @@ class Chat:
         msg = ""
         if isinstance(video_path, str):  # is a video path
             ext = os.path.splitext(video_path)[-1].lower()
-            print(f"\nuploading {video_path}")
+            #print(f"\nuploading {video_path}")
             # image = self.vis_processor(image).unsqueeze(0).to(self.device)
             video, msg = load_video(
                 video_path=video_path,
@@ -276,7 +276,7 @@ class Chat:
             audio = load_and_transform_audio_data([video_path],"cpu",  clips_per_video=8)
             audio = audio.to(self.device)
         except :
-            print('no audio is found')
+            #print('no audio is found')
             audio_flag = 0
         finally:
             if audio_flag == 1:
@@ -297,7 +297,7 @@ class Chat:
                 self.img_list.append(image_emb)
                 self.conv.append_message(self.conv.roles[0], "<Video><ImageHere></Video> "+ msg)
             self.video_msg = msg
-            print(f"chat.upload_video - len(img_list): {len(self.img_list)}, AL-branch_out: audio_emb.size():{audio_emb.size()}, VL-branch_out: image_emb.size():{image_emb.size()}")
+            #print(f"chat.upload_video - len(img_list): {len(self.img_list)}, AL-branch_out: audio_emb.size():{audio_emb.size()}, VL-branch_out: image_emb.size():{image_emb.size()}")
             return "Received."
 
     def upload_video_without_audio(self, video_path, start_time, duration):
@@ -325,7 +325,7 @@ class Chat:
         self.img_list.append(image_emb)
         self.conv.append_message(self.conv.roles[0], "<Video><ImageHere></Video> "+ msg)
         self.video_msg = msg
-        print(f"chat.upload_video_without_audio - len(img_list): {len(self.img_list)}, VL-branch_out: image_emb.size():{image_emb.size()}")
+        #print(f"chat.upload_video_without_audio - len(img_list): {len(self.img_list)}, VL-branch_out: image_emb.size():{image_emb.size()}")
         return "Received."
 
     def upload_img(self, image):
@@ -349,7 +349,7 @@ class Chat:
         self.img_list.append(image_emb)
         # Todo msg=""
         self.conv.append_message(self.conv.roles[0], "<Image><ImageHere></Image> "+ msg)
-        print(f"chat.upload_img - len(img_list): {len(self.img_list)}, VL-branch_out: image_emb.size():{image_emb.size()}")
+        #print(f"chat.upload_img - len(img_list): {len(self.img_list)}, VL-branch_out: image_emb.size():{image_emb.size()}")
         self.video_msg = msg
         return "Received."
 
@@ -358,8 +358,8 @@ class Chat:
         prompt_segs = prompt.split("<rag_prompt>")
         prompt_segs.insert(1, "The user wants to know:")
         prompt_segs = "".join(prompt_segs).split('<ImageHere>')
-        print(f"chat.get_context_emb - prompt_segs before keep_conv_hist block:\n  {prompt_segs}")
-        print("len(conv.messages):", len(self.conv.messages))
+        #print(f"chat.get_context_emb - prompt_segs before keep_conv_hist block:\n  {prompt_segs}")
+        #print("len(conv.messages):", len(self.conv.messages))
         if len(self.conv.messages) > 2 and not keep_conv_hist: # forget previous answers and reply to the question with provided image/audio embs
             media_placeholdername = prompt_segs[0][-7:] # <Image> or <Video>
             if self.conv.sep_style == SeparatorStyle.LLAMA_2:
@@ -371,10 +371,10 @@ class Chat:
             else:
                 print("prompt_segs error in chat.get_context_emb")
 
-        print(f"chat.get_context_emb - prompt_segs after keep_conv_hist block:\n  {prompt_segs}")
-        print(f"chat.get_context_emb - len(img_list): {len(self.img_list)}")
-        for i in range(len(self.img_list)):
-            print(f"img_list[{i}].size(): {self.img_list[i].size()}")
+        #print(f"chat.get_context_emb - prompt_segs after keep_conv_hist block:\n  {prompt_segs}")
+        #print(f"chat.get_context_emb - len(img_list): {len(self.img_list)}")
+        #for i in range(len(self.img_list)):
+        #    print(f"img_list[{i}].size(): {self.img_list[i].size()}")
         assert len(prompt_segs) == len(self.img_list) + 1, "Unmatched numbers of image placeholders and images."
         seg_tokens = [
             self.model.llama_tokenizer(
@@ -382,14 +382,14 @@ class Chat:
             # only add bos to the first seg
             for i, seg in enumerate(prompt_segs)
         ]
-        print(f"chat.get_context_emb - len(seg_tokens): {len(seg_tokens)}")
-        for i in range(len(seg_tokens)):
-            print(f"seg_tokens[{i}].size(): {seg_tokens[i].size()}")
+        #print(f"chat.get_context_emb - len(seg_tokens): {len(seg_tokens)}")
+        #for i in range(len(seg_tokens)):
+        #    print(f"seg_tokens[{i}].size(): {seg_tokens[i].size()}")
         seg_embs = [self.model.llama_model.model.embed_tokens(seg_t) for seg_t in seg_tokens]
         #print(f"chat.get_context_emb - seg_embs[:3]: {seg_embs[:3]}")
         mixed_embs = [emb for pair in zip(seg_embs[:-1], self.img_list) for emb in pair] + [seg_embs[-1]]
         mixed_embs = torch.cat(mixed_embs, dim=1)
-        print(f"chat.get_context_emb - mixed_embs.size(): {mixed_embs.size()}")
+        #print(f"chat.get_context_emb - mixed_embs.size(): {mixed_embs.size()}")
         return mixed_embs
 
     def clear(self):

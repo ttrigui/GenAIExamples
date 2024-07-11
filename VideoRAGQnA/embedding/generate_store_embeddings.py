@@ -169,9 +169,10 @@ def generate_embeddings(config, embedding_model, vs):
 def retrieval_testing(vs):
     Q = 'Man holding red shopping basket'
     print (f'Testing Query: {Q}')
-    results = vs.MultiModalRetrieval(Q)
+    top_k = 3
+    results = vs.MultiModalRetrieval(Q, top_k=top_k)
 
-    print(results)
+    print(f"top-{top_k} returned results:", results)
 
 def main():
     # read config yaml
