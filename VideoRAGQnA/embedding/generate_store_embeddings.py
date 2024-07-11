@@ -172,7 +172,7 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
                     start_time=[data['timestamp']],
                     clip_duration=[data['clip_duration']]
                 )
-            else:
+            elif vs.selected_db == 'chroma':
                 # Call local embedding function to retrieve tensor
                 tensor = vs.video_embedder.embed_video(paths=video_name_list,
                     metadatas=metadata_list,
@@ -183,6 +183,8 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
                     embeddings=tensor,
                     ids=[f"{idx}"]
                 )
+            else:
+                print(f"ERROR: selected_db {vs.selected_db} not supported. Supported:[vdms, chroma]")
         print (f'✅ {idx+1}/{total_videos} video {video}')
 
 def generate_embeddings(config, embedding_model, vs):

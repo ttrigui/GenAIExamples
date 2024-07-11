@@ -229,14 +229,15 @@ class VideoVS:
                     self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, "filter":self.constraints})
             if self.selected_db == 'chroma':
                 if date_string == 'today':
-                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': {'date': {'$eq': date_out}}})
+                    self.constraints = {'date': {'$eq': date_out}}
+                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': self.constraints})
                 elif date_out != str(today_date) and time_out =='00:00:00': ## exact day (example last firday)
-                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': {'date': {'$eq': date_out}}})
+                    self.constraints = {'date': {'$eq': date_out}}
+                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': self.constraints})
                 elif date_out == str(today_date) and time_out =='00:00:00': ## when search_date interprates words as dates output is todays date + time 00:00:00
                     self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
                 else: ## Interval  of time:last 48 hours, last 2 days,..
-                    self.constraints = {"date_time": [ ">=", {"_date":iso_date_time}]}
-                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'filter': {
+                    self.constraints = {
                             "$or": [
                                 {
                                     "$and": [
@@ -295,8 +296,9 @@ class VideoVS:
                                     ]
                                 }
                             ]
-                        },
-                        'k':n_images})
+                        }
+                    self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, 'filter': self.constraints
+                        })
         else:
             self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
     
