@@ -21,58 +21,47 @@ import os
 import argparse
 import torch
 from langchain_experimental.open_clip import OpenCLIPEmbeddings
-from embedding.adaclip_modeling.model import AdaCLIP
-from embedding.adaclip_modeling.clip_model import CLIP
+from embedding.meanclip_modeling.model import MeanCLIP
+from embedding.meanclip_modeling.clip_model import CLIP
 from utils import config_reader as reader
 from embedding.extract_store_frames import process_all_videos
 from embedding.vector_stores import db
 from decord import VideoReader, cpu
 import numpy as np
 from PIL import Image
-from embedding.adaclip_datasets.preprocess import get_transforms
+from embedding.meanclip_datasets.preprocess import get_transforms
 
 
-def setup_adaclip_model(cfg, device):
+def setup_meanclip_model(cfg, device):
 
     pretrained_state_dict = CLIP.get_config(pretrained_clip_name=cfg.clip_backbone)
     state_dict = {}
     epoch = 0
-    if cfg.resume is not None and os.path.exists(cfg.resume):
-        print("Loading AdaCLIP from", cfg.resume)
-        checkpoint = torch.load(cfg.resume, map_location="cpu")
-        state_dict = checkpoint['state_dict']
-        epoch = checkpoint["epoch"]
-    else:
-        print("Loading CLIP pretrained weights ...")
-        for key, val in pretrained_state_dict.items():    
-            new_key = "clip." + key
-            if new_key not in state_dict:
-                state_dict[new_key] = val.clone()
+    print("Loading CLIP pretrained weights ...")
+    for key, val in pretrained_state_dict.items():    
+        new_key = "clip." + key
+        if new_key not in state_dict:
+            state_dict[new_key] = val.clone()
 
-        if cfg.sim_header != "meanP":
-            for key, val in pretrained_state_dict.items():
-                # initialize for the frame and type postion embedding
-                if key == "positional_embedding":
-                    state_dict["frame_position_embeddings.weight"] = val.clone()
+    if cfg.sim_header != "meanP":
+        for key, val in pretrained_state_dict.items():
+            # initialize for the frame and type postion embedding
+            if key == "positional_embedding":
+                state_dict["frame_position_embeddings.weight"] = val.clone()
 
-                # using weight of first 4 layers for initialization
-                if key.find("transformer.resblocks") == 0:
-                    num_layer = int(key.split(".")[2])
+            # using weight of first 4 layers for initialization
+            if key.find("transformer.resblocks") == 0:
+                num_layer = int(key.split(".")[2])
 
-                    # initialize the 4-layer temporal transformer
-                    if num_layer < 4:
-                        state_dict[key.replace("transformer.", "transformerClip.")] = val.clone()
-                        continue
+                # initialize the 4-layer temporal transformer
+                if num_layer < 4:
+                    state_dict[key.replace("transformer.", "transformerClip.")] = val.clone()
+                    continue
 
-                    if num_layer == 4: # for 1-layer transformer sim_header
-                        state_dict[key.replace(str(num_layer), "0")] = val.clone()
+                if num_layer == 4: # for 1-layer transformer sim_header
+                    state_dict[key.replace(str(num_layer), "0")] = val.clone()
 
-    model = AdaCLIP(cfg, pretrained_state_dict)
-    # use mean aggregation and no_policy if pretrained model weights don't exist
-    if cfg.resume is None or not os.path.exists(cfg.resume):
-        print("Using Mean Aggregation and no_policy")
-        model.frame_agg = "mean"
-        model.use_policy = False
+    model = MeanCLIP(cfg, pretrained_state_dict)
     missing_keys = []
     unexpected_keys = []
     error_msgs = []
@@ -92,25 +81,8 @@ def setup_adaclip_model(cfg, device):
 
     load(model, prefix='')
 
-    if cfg.debug:
-        print("-" * 20)
-        if len(missing_keys) > 0:
-            print("Weights of {} not initialized from pretrained model: {}"
-                        .format(model.__class__.__name__, "\n   " + "\n   ".join(missing_keys)))
-        if len(unexpected_keys) > 0:
-            print("Weights from pretrained model not used in {}: {}"
-                        .format(model.__class__.__name__, "\n   " + "\n   ".join(unexpected_keys)))
-        if len(error_msgs) > 0:
-            print("Weights from pretrained model cause errors in {}: {}"
-                            .format(model.__class__.__name__, "\n   " + "\n   ".join(error_msgs)))
-
     if str(device) == "cpu":
         model.float()
-
-    if cfg.freeze_clip:
-        model.freeze_clip()
-    if cfg.freeze_cnn and cfg.use_policy:
-        model.sampler.freeze_cnn_backbone()
 
     model.to(device)
 
@@ -134,7 +106,7 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
 
     total_videos = len(GMetadata.keys())
     
-    for _, (video, data) in enumerate(GMetadata.items()):
+    for idx, (video, data) in enumerate(GMetadata.items()):
 
         image_name_list = []
         embedding_list = []
@@ -146,7 +118,7 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
             frame_metadata = read_json(data['extracted_frame_metadata_file'])
             for frame_id, frame_details in frame_metadata.items():
                 global_counter += 1
-                if selected_db == 'vdms':
+                if vs.selected_db == 'vdms':
                     meta_data = {
                         'timestamp': frame_details['timestamp'],
                         'frame_path': frame_details['frame_path'],
@@ -162,7 +134,7 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
                         'minutes': frame_details['minutes'],
                         'seconds': frame_details['seconds'],
                     }
-                if selected_db == 'chroma':
+                if vs.selected_db == 'chroma':
                     meta_data = {
                         'timestamp': frame_details['timestamp'],
                         'frame_path': frame_details['frame_path'],
@@ -176,6 +148,7 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
                         'hours': frame_details['hours'],
                         'minutes': frame_details['minutes'],
                         'seconds': frame_details['seconds'],
+                        'hnsw:space': "ip", # Inner Product as distance_key for similarity
                     }
                 image_path = frame_details['frame_path']
                 image_name_list.append(image_path)
@@ -184,8 +157,6 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
                 ids.append(str(global_counter))
                 # print('datetime',meta_data['date_time'])
 
-            # generate clip embeddings
-            embedding_list.extend(embedding_model.embed_image(image_name_list)) # FIXME: Are these even used??
             vs.add_images(
                 uris=image_name_list,
                 metadatas=metadata_list
@@ -194,13 +165,25 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
             data['video'] = video
             video_name_list = [data["video_path"]]
             metadata_list = [data]
-            vs.video_db.add_videos(
-                paths=video_name_list,
-                metadatas=metadata_list,
-                start_time=[data['timestamp']],
-                clip_duration=[data['clip_duration']]
-            )
-        print (f'✅ {_+1}/{total_videos} video {video}, len {len(video_name_list)}, {len(metadata_list)}, {len(embedding_list)}')
+            if vs.selected_db == 'vdms':
+                vs.video_db.add_videos(
+                    paths=video_name_list,
+                    metadatas=metadata_list,
+                    start_time=[data['timestamp']],
+                    clip_duration=[data['clip_duration']]
+                )
+            else:
+                # Call local embedding function to retrieve tensor
+                tensor = vs.video_embedder.embed_video(paths=video_name_list,
+                    metadatas=metadata_list,
+                    start_time=[data['timestamp']],
+                    clip_duration=[data['clip_duration']])
+                vs.video_db._collection.add(
+                    metadatas=metadata_list,
+                    embeddings=tensor,
+                    ids=[f"{idx}"]
+                )
+        print (f'✅ {idx+1}/{total_videos} video {video}')
 
 def generate_embeddings(config, embedding_model, vs):
     if not os.path.exists(config['image_output_dir']):
@@ -214,11 +197,12 @@ def generate_embeddings(config, embedding_model, vs):
     store_into_vectordb(vs, global_metadata_file_path, embedding_model, config)
 
 def retrieval_testing(vs):
-    Q = 'man holding red basket'
-    print (f'Testing Query {Q}')
-    results = vs.MultiModalRetrieval(Q)
+    Q = 'Man holding red shopping basket'
+    print (f'Testing Query: {Q}')
+    top_k = 3
+    results = vs.MultiModalRetrieval(Q, top_k=top_k)
 
-    print(results)
+    print(f"top-{top_k} returned results:", results)
 
 def main():
     # read config yaml
@@ -233,10 +217,9 @@ def main():
     args = parser.parse_args()
     # Read configuration file
     config = reader.read_config(args.config_file)
-    # Read AdaCLIP
-    adaclip_cfg_json = json.load(open(config['adaclip_cfg_path'], 'r'))
-    adaclip_cfg_json["resume"] = config['adaclip_model_path']
-    adaclip_cfg = argparse.Namespace(**adaclip_cfg_json)
+    # Read MeanCLIP
+    meanclip_cfg_json = json.load(open(config['meanclip_cfg_path'], 'r'))
+    meanclip_cfg = argparse.Namespace(**meanclip_cfg_json)
 
 
     print ('Config file data \n', yaml.dump(config, default_flow_style=False, sort_keys=False))
@@ -254,8 +237,8 @@ def main():
     selected_db = config['vector_db']['choice_of_db']
 
     # Creating DB
-    print ('Creating DB with text and image embedding support, \nIt may take few minutes to download and load all required models if you are running for first time.')
-    print('Connect to {} at {}:{}'.format(selected_db, host, port))
+    print ('Creating DB with video embedding and metadata support, \nIt may take few minutes to download and load all required models if you are running for first time.')
+    print('Connecting to {} at {}:{}'.format(selected_db, host, port))
 
     if config['embeddings']['type'] == 'frame':
         vs = db.VS(host, port, selected_db)
@@ -263,8 +246,8 @@ def main():
         model = OpenCLIPEmbeddings(model_name="ViT-g-14", checkpoint="laion2b_s34b_b88k")
 
     elif config['embeddings']['type'] == 'video':
-        # init adaclip model
-        model, _ = setup_adaclip_model(adaclip_cfg, device="cpu")
+        # init meanclip model
+        model, _ = setup_meanclip_model(meanclip_cfg, device="cpu")
         vs = db.VideoVS(host, port, selected_db, model)
     else:
         print(f"ERROR: Selected embedding type in config.yaml {config['embeddings']['type']} is not in [\'video\', \'frame\']")
