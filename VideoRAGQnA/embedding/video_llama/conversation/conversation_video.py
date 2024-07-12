@@ -169,14 +169,14 @@ Rules:\
 - Don't answer any question which are not related to provied video content.\
 - Don't be toxic and don't include harmful information.\
 - provide answers only if you find it in the video content, otherwise just say You don't have enough information to answer the question.\
-- Describe in detail the relevant actions of the individuals mentioned in the question. \
+- Describe in detail the relevant actions of the individuals mentioned in the question and visible in the video. \
 - Provide full details of the persons actions and roles. Focus on the individual and the action being performed.\
 - Exclude information about their age .\
-- Do not mention  items on the shelf that are not observable. \
+- Do not mention  items on the shelf that are not observable and visible. \
 - Exclude information about the background and surrounding details.\
 - Ensure all information is distinct, accurate, and directly observable. \
 - Do not repeat actions. \
-- Mention actions only once.\
+- Mention a person's actions only once.\
 \
 Here are the video embeddings:",
     roles=("USER", "ASSISTANT"),
