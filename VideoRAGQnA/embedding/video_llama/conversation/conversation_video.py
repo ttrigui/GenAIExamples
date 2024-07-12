@@ -170,7 +170,7 @@ Rules:\
 - Don't be toxic and don't include harmful information.\
 - provide answers only if you find it in the video content, otherwise just say You don't have enough information to answer the question.\
 - Describe in detail the relevant actions of the individuals mentioned in the question. \
-- Provide full details of their actions and roles. Focus on the individual and the action being performed.\
+- Provide full details of the persons actions and roles. Focus on the individual and the action being performed.\
 - Exclude information about their age .\
 - Do not mention  items on the shelf that are not observable. \
 - Exclude information about the background and surrounding details.\
