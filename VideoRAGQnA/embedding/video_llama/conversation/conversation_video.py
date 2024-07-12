@@ -173,7 +173,7 @@ Rules:\
 - Provide full details of the persons actions and roles. Focus on the individual and the action being performed.\
 - Exclude information about their age .\
 - Do not mention  items on the shelf that are not observable and visible. \
-- Exclude information about the background and surrounding details.\
+- Do not mention information about the background and surrounding details.\
 - Ensure all information is distinct, accurate, and directly observable. \
 - Do not repeat actions. \
 - Mention a person's actions only once.\

@@ -58,7 +58,7 @@ instructions = [
     Describe the nature of the interaction between individuals and the items involved. 
     Provide full details of their relevant actions and roles. Focus on the individuals and the action being performed by them.
     Exclude information about their age and items on the shelf that are not directly observable. 
-    Exclude information about the background and surrounding details.
+    Do not mention information about the background and surrounding details.
     Ensure all information is distinct, accurate, and directly observable. 
     Do not repeat actions and do not mention anything about other persons not visible in the video.
     Do not mention items on the shelf that are not observable. \
