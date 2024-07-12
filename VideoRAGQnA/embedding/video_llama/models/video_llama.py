@@ -281,18 +281,18 @@ class VideoLLAMA(Blip2Base):
         device = image.device
         
         # input shape b,c,t,h,w
-        print("\n - - - - - ")
+        #print("\n - - - - - ")
         batch_size,_,time_length,_,_ = image.size()
-        print("   image.shape in video_llama.285:", image.shape)
+        #print("   image.shape in video_llama.285:", image.shape)
         image = einops.rearrange(image, 'b c t h w -> (b t) c h w')
-        print("   image.shape in video_llama.287:", image.shape)
+        #print("   image.shape in video_llama.287:", image.shape)
         with self.maybe_autocast():
             # embed image features with blip2, out: (b t) q h
             image_embeds = self.ln_vision(self.visual_encoder(image)).to(device)
             image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(device)
-            print("   image_embeds.shape in video_llama.290:", image_embeds.shape)
+            #print("   image_embeds.shape in video_llama.290:", image_embeds.shape)
             query_tokens = self.query_tokens.expand(image_embeds.shape[0], -1, -1)
-            print("   query_tokens.shape in video_llama.292:", query_tokens.shape)
+            #print("   query_tokens.shape in video_llama.292:", query_tokens.shape)
             query_output = self.Qformer.bert(
                 query_embeds=query_tokens,
                 encoder_hidden_states=image_embeds,
@@ -305,17 +305,17 @@ class VideoLLAMA(Blip2Base):
             position_ids = position_ids.unsqueeze(0).expand(batch_size, -1)
             frame_position_embeddings = self.video_frame_position_embedding(position_ids)
             q_hidden_state = query_output.last_hidden_state
-            print("   q_hidden_state.shape in video_llama.305:", q_hidden_state.shape)
+            #print("   q_hidden_state.shape in video_llama.305:", q_hidden_state.shape)
 
             frame_position_embeddings = frame_position_embeddings.unsqueeze(-2)
             frame_hidden_state = einops.rearrange(q_hidden_state, '(b t) q h -> b t q h',b=batch_size,t=time_length)
             frame_hidden_state = frame_position_embeddings + frame_hidden_state
-            print("   frame_hidden_state.shape in video_llama.310:", frame_hidden_state.shape)
+            #print("   frame_hidden_state.shape in video_llama.310:", frame_hidden_state.shape)
             # frame attention
             frame_hidden_state =  einops.rearrange(frame_hidden_state, 'b t q h -> b (t q) h',b=batch_size,t=time_length)
             frame_atts = torch.ones(frame_hidden_state.size()[:-1], dtype=torch.long).to(device)
             video_query_tokens = self.video_query_tokens.expand(frame_hidden_state.shape[0], -1, -1)
-            print("   video_query_tokens.shape in video_llama.315:", video_query_tokens.shape)
+            #print("   video_query_tokens.shape in video_llama.315:", video_query_tokens.shape)
             video_query_output = self.video_Qformer.bert(
                 query_embeds=video_query_tokens,
                 encoder_hidden_states=frame_hidden_state,
@@ -323,10 +323,10 @@ class VideoLLAMA(Blip2Base):
                 return_dict=True,
                 )
             video_hidden = video_query_output.last_hidden_state
-            print("   video_hidden.shape in video_llama.323:", video_hidden.shape)
+            #print("   video_hidden.shape in video_llama.323:", video_hidden.shape)
             inputs_llama = self.llama_proj(video_hidden)
-            print("   inputs_llama.shape in video_llama.325:", inputs_llama.shape)
-            print(" - - - - - \n")
+            #print("   inputs_llama.shape in video_llama.325:", inputs_llama.shape)
+            #print(" - - - - - \n")
             atts_llama = torch.ones(inputs_llama.size()[:-1], dtype=torch.long).to(image_embeds.device)
         return inputs_llama, atts_llama
     
@@ -334,23 +334,23 @@ class VideoLLAMA(Blip2Base):
     def prompt_wrap(self, img_embeds, atts_img, prompt):
         if prompt:
             batch_size = img_embeds.shape[0]
-            print(f"video_llama.prompt_wrap - img_embeds.size():{img_embeds.size()}")
-            print(f"video_llama.prompt_wrap - prompt:{prompt}")
+            #print(f"video_llama.prompt_wrap - img_embeds.size():{img_embeds.size()}")
+            #print(f"video_llama.prompt_wrap - prompt:{prompt}")
             p_before, p_after = prompt.split('<ImageHere>')
             p_before_tokens = self.llama_tokenizer(
                 p_before, return_tensors="pt", add_special_tokens=False).to(img_embeds.device)
             p_after_tokens = self.llama_tokenizer(
                 p_after, return_tensors="pt", add_special_tokens=False).to(img_embeds.device)
-            print(f"video_llama.prompt_wrap - p_before_tokens.size():{p_before_tokens.size()}")
-            print(f"video_llama.prompt_wrap - p_after_tokens.size():{p_after_tokens.size()}")
+            #print(f"video_llama.prompt_wrap - p_before_tokens.size():{p_before_tokens.size()}")
+            #print(f"video_llama.prompt_wrap - p_after_tokens.size():{p_after_tokens.size()}")
             p_before_embeds = self.llama_model.model.embed_tokens(p_before_tokens.input_ids).expand(batch_size, -1, -1)
             p_after_embeds = self.llama_model.model.embed_tokens(p_after_tokens.input_ids).expand(batch_size, -1, -1)
-            print(f"video_llama.prompt_wrap - p_before_embeds.size():{p_before_embeds.size()}")
-            print(f"video_llama.prompt_wrap - p_after_embeds.size():{p_after_embeds.size()}")
+            #print(f"video_llama.prompt_wrap - p_before_embeds.size():{p_before_embeds.size()}")
+            #print(f"video_llama.prompt_wrap - p_after_embeds.size():{p_after_embeds.size()}")
             wrapped_img_embeds = torch.cat([p_before_embeds, img_embeds, p_after_embeds], dim=1)
             wrapped_atts_img = atts_img[:, :1].expand(-1, wrapped_img_embeds.shape[1])
-            print(f"video_llama.prompt_wrap - wrapped_img_embeds.size():{wrapped_img_embeds.size()}")
-            print(f"video_llama.prompt_wrap - wrapped_atts_img.size():{wrapped_atts_img.size()}")
+            #print(f"video_llama.prompt_wrap - wrapped_img_embeds.size():{wrapped_img_embeds.size()}")
+            #print(f"video_llama.prompt_wrap - wrapped_atts_img.size():{wrapped_atts_img.size()}")
             return wrapped_img_embeds, wrapped_atts_img
         else:
             return img_embeds, atts_img
