@@ -41,12 +41,12 @@ set_seed(22)
 instructions = [
     """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the video content. 
     Describe in detail the relevant actions of the individuals mentioned in the question. 
-    Provide full details of their actions being performed and roles. Focus on the individual and the actions being performed.\
+    Provide full details of their actions being performed and roles. Focus on the individual and the actions being performed.
     Exclude information about their age and items on the shelf that are not directly observable. 
     Do not mention items on the shelf that are not observable. \
     Exclude information about the background and surrounding details.
     Ensure all information is distinct, accurate, and directly observable. 
-    Do not repeat actions and do not mention anything about other persons not visible in the video.
+    Do not repeat actions of individuals and do not mention anything about other persons not visible in the video.
     Mention actions and roles once only.
     """,
     
@@ -58,10 +58,10 @@ instructions = [
     Describe the nature of the interaction between individuals and the items involved. 
     Provide full details of their relevant actions and roles. Focus on the individuals and the action being performed by them.
     Exclude information about their age and items on the shelf that are not directly observable. 
-    Do not mention information about the background and surrounding details.
+    Exclude information about the background and surrounding details.
     Ensure all information is distinct, accurate, and directly observable. 
-    Do not repeat actions and do not mention anything about other persons not visible in the video.
-    Do not mention items on the shelf that are not observable. \
+    Do not repeat actions of individuals and do not mention anything about other persons not visible in the video.
+    Do not mention  items on the shelf that are not observable. \
     """,
     
     """Analyze the provided data to answer queries based on specific time intervals.
