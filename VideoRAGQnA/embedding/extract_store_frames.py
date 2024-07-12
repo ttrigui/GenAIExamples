@@ -33,7 +33,6 @@ def calculate_intervals(video_path, chunk_duration, clip_duration):
 
 def process_all_videos(config):
     path = config['videos']
-    image_output_dir = config['image_output_dir'] 
     meta_output_dir = config['meta_output_dir']
     N = config['number_of_frames_per_second']
     selected_db = config['vector_db']['choice_of_db']
@@ -42,10 +41,9 @@ def process_all_videos(config):
     chunk_duration = config['chunk_duration']
     clip_duration = config['clip_duration']
 
-    def extract_frames(video_path, image_output_dir, meta_output_dir, N, date_time, local_timezone):
+    def extract_frames(video_path, meta_output_dir, N, date_time, local_timezone):
         video = os.path.splitext(os.path.basename(video_path))[0]
         # Create a directory to store frames and metadata
-        os.makedirs(image_output_dir, exist_ok=True)
         os.makedirs(meta_output_dir, exist_ok=True)
         
         # Open the video file
@@ -127,7 +125,7 @@ def process_all_videos(config):
         # Get the local timezone of the machine
         local_timezone = get_localzone()
         if emb_type == 'frame':
-            fps, total_frames, metadata_file = extract_frames(video_path, image_output_dir, meta_output_dir, N, date_time, local_timezone)
+            fps, total_frames, metadata_file = extract_frames(video_path, meta_output_dir, N, date_time, local_timezone)
             metadata[each_video].update({
                 'extracted_frame_metadata_file': metadata_file,
             })
