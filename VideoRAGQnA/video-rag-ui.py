@@ -39,19 +39,28 @@ from embedding.video_llama.tasks import *
 set_seed(22)
 
 instructions = [
-    """Identify the person [with specific features / seen at a specific location
-    / performing a specific action] in the provided data. Provide details such as their
-    role, and any other relevant information, 
-    Do not give repetitions, always give distinct and accurate information only.
+    """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the video content. 
+    Describe in detail the relevant actions and appearances of the individuals mentioned in the question. 
+    Provide full details of their actions and roles. Focus on the individual and the action being performed.
+    Exclude information about their age and items on the shelf that are not directly observable. 
+    Exclude information about the background and surrounding details.
+    Ensure all information is distinct, accurate, and directly observable. 
+    Do not repeat actions and Do not mention anything about a woman.
+    Mention actions and roles once only.
     """,
     
     """Analyze the provided data to recognize and describe the activities performed by individuals.
     Specify the type of activity and any relevant contextual details, 
     Do not give repetitions, always give distinct and accurate information only.""",
     
-    """Determine the interactions between individuals and items in the provided data.
-    Describe the nature of the interaction and the items involved, 
-    Do not give repetitions, always give distinct and accurate information only.""",
+    """Determine the interactions between individuals and items in the provided data. 
+    Describe the nature of the interaction between individuals and the items involved. 
+    Provide full details of their actions and roles. Focus on the individual and the action being performed.
+    Do not repeat actions and Do not mention anything about a woman.
+    Exclude information about various items on the shelf, and do not mention any items on the shelf. 
+    Avoid assumptions about age and background details. Do not mention anything about a woman.
+    Exclude information about the background and surrounding details.
+    """,
     
     """Analyze the provided data to answer queries based on specific time intervals.
     Provide detailed information corresponding to the specified time frames,
@@ -65,6 +74,7 @@ instructions = [
     Provide a detailed account of the events,
     Do not give repetitions, always give distinct and accurate information only."""
 ]
+
 
 # Embeddings
 HFembeddings = HuggingFaceEmbeddings()
