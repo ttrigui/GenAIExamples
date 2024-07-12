@@ -40,7 +40,7 @@ set_seed(22)
 
 instructions = [
     """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the video content. 
-    Describe in detail the relevant actions and appearances of the individuals mentioned in the question. 
+    Describe in detail the relevant actions of the individuals mentioned in the question. 
     Provide full details of their actions and roles. Focus on the individual and the action being performed.
     Exclude information about their age and items on the shelf that are not directly observable. 
     Do not mention items on the shelf that are not observable. \
