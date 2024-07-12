@@ -43,6 +43,7 @@ instructions = [
     Describe in detail the relevant actions and appearances of the individuals mentioned in the question. 
     Provide full details of their actions and roles. Focus on the individual and the action being performed.
     Exclude information about their age and items on the shelf that are not directly observable. 
+    Do not mention items on the shelf that are not observable. \
     Exclude information about the background and surrounding details.
     Ensure all information is distinct, accurate, and directly observable. 
     Do not repeat actions and do not mention anything about a woman.
@@ -55,11 +56,12 @@ instructions = [
     
     """Determine the interactions between individuals and items in the provided data. 
     Describe the nature of the interaction between individuals and the items involved. 
-    Provide full details of their actions and roles. Focus on the individual and the action being performed.
+    Provide full details of their actions and roles. Focus on the individuals and the action being performed by them.
     Exclude information about their age and items on the shelf that are not directly observable. 
     Exclude information about the background and surrounding details.
     Ensure all information is distinct, accurate, and directly observable. 
     Do not repeat actions and do not mention anything about a woman.
+    Do not mention  items on the shelf that are not observable. \
     """,
     
     """Analyze the provided data to answer queries based on specific time intervals.
