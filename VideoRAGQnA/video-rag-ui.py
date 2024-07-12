@@ -43,7 +43,7 @@ instructions = [
     Describe in detail the relevant actions of the individuals mentioned in the question. 
     Provide full details of their actions being performed and roles. Focus on the individual and the actions being performed.
     Exclude information about their age and items on the shelf that are not directly observable. 
-    Do not mention items on the shelf that are not observable. \
+    Do not mention items on the shelf that are not  visible. \
     Exclude information about the background and surrounding details.
     Ensure all information is distinct, accurate, and directly observable. 
     Do not repeat actions of individuals and do not mention anything about other persons not visible in the video.
