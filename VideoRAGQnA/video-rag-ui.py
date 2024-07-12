@@ -39,43 +39,43 @@ from embedding.video_llama.tasks import *
 set_seed(22)
 
 instructions = [
-    """Identify the person with specific features, seen at a specific location, or performing a specific action in the provided video data.\
-    Describe in detail the relevant actions of the identified individual.\
-    Provide comprehensive details of the actions being performed and their roles.\
-    Focus solely on the individual and their actions.\
-    Exclude any information about their age, background, surrounding details, or unobservable items on the shelf.\
-    Ensure all information is distinct, accurate, and directly observable.\
-    Do not repeat actions or mention other persons not visible in the video.""",
+    """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the video content. 
+    Describe in detail the relevant actions of the individuals mentioned in the question. 
+    Provide full details of their actions being performed and roles. Focus on the individual and the actions being performed.\
+    Exclude information about their age and items on the shelf that are not directly observable. 
+    Do not mention items on the shelf that are not observable. \
+    Exclude information about the background and surrounding details.
+    Ensure all information is distinct, accurate, and directly observable. 
+    Do not repeat actions and do not mention anything about other persons not visible in the video.
+    Mention actions and roles once only.
+    """,
     
     """Analyze the provided data to recognize and describe the activities performed by individuals.
-    Specify the type of activity and any relevant contextual details.
-    Ensure all information is distinct and accurate.
-    Avoid repetitions.""",
+    Specify the type of activity and any relevant contextual details, 
+    Do not give repetitions, always give distinct and accurate information only.""",
     
-    """Determine the interactions between individuals and items in the provided data.\
-    Describe the nature of the interaction and the actions performed by the individuals.\
-    Provide detailed information about their actions and roles.\
-    Focus on the individuals and the actions being performed by them.\
-    Exclude any information about their age, background, surrounding details, or unobservable items on the shelf.\
-    Ensure all information is distinct, accurate, and directly observable.\
-    Do not repeat actions or mention other persons not visible in the video.""",
+    """Determine the interactions between individuals and items in the provided data. 
+    Describe the nature of the interaction between individuals and the items involved. 
+    Provide full details of their relevant actions and roles. Focus on the individuals and the action being performed by them.
+    Exclude information about their age and items on the shelf that are not directly observable. 
+    Exclude information about the background and surrounding details.
+    Ensure all information is distinct, accurate, and directly observable. 
+    Do not repeat actions and do not mention anything about other persons not visible in the video.
+    Do not mention items on the shelf that are not observable. \
+    """,
     
     """Analyze the provided data to answer queries based on specific time intervals.
-    Provide detailed information corresponding to the specified time frames.
-    Ensure all information is distinct and accurate.
-    Avoid repetitions.""",
+    Provide detailed information corresponding to the specified time frames,
+    Do not give repetitions, always give distinct and accurate information only.""",
     
     """Identify individuals based on their appearance as described in the provided data.
-    Provide details about their identity and actions.
-    Ensure all information is distinct and accurate.
-    Avoid repetitions.""",
+     Provide details about their identity and actions,
+     Do not give repetitions, always give distinct and accurate information only.""",
     
     """Answer questions related to events and activities that occurred on a specific day.
-    Provide a detailed account of the events.
-    Ensure all information is distinct and accurate.
-    Avoid repetitions."""
+    Provide a detailed account of the events,
+    Do not give repetitions, always give distinct and accurate information only."""
 ]
-
 
 
 # Embeddings
