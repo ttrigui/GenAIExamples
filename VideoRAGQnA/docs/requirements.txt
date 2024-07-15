@@ -21,3 +21,4 @@ decord
 easydict
 omegaconf
 webdataset
+faiss-cpu

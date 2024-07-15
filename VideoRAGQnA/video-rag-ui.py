@@ -13,6 +13,8 @@ import argparse
 
 from typing import Any, List, Mapping, Optional
 from langchain_core.callbacks.manager import CallbackManagerForLLMRun
+from langchain.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.llms.base import LLM
 import threading
 from utils import config_reader as reader
@@ -36,11 +38,62 @@ from embedding.video_llama.tasks import *
 
 set_seed(22)
 
+instructions = [
+    """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the video content. 
+    Describe in detail the relevant actions of the individuals mentioned in the question. 
+    Provide full details of their actions being performed and roles. Focus on the individual and the actions being performed.
+    Exclude information about their age and items on the shelf that are not directly observable. 
+    Do not mention items on the shelf that are not  visible. \
+    Exclude information about the background and surrounding details.
+    Ensure all information is distinct, accurate, and directly observable. 
+    Do not repeat actions of individuals and do not mention anything about other persons not visible in the video.
+    Mention actions and roles once only.
+    """,
+    
+    """Analyze the provided data to recognize and describe the activities performed by individuals.
+    Specify the type of activity and any relevant contextual details, 
+    Do not give repetitions, always give distinct and accurate information only.""",
+    
+    """Determine the interactions between individuals and items in the provided data. 
+    Describe the nature of the interaction between individuals and the items involved. 
+    Provide full details of their relevant actions and roles. Focus on the individuals and the action being performed by them.
+    Exclude information about their age and items on the shelf that are not directly observable. 
+    Exclude information about the background and surrounding details.
+    Ensure all information is distinct, accurate, and directly observable. 
+    Do not repeat actions of individuals and do not mention anything about other persons not visible in the video.
+    Do not mention  items on the shelf that are not observable. \
+    """,
+    
+    """Analyze the provided data to answer queries based on specific time intervals.
+    Provide detailed information corresponding to the specified time frames,
+    Do not give repetitions, always give distinct and accurate information only.""",
+    
+    """Identify individuals based on their appearance as described in the provided data.
+     Provide details about their identity and actions,
+     Do not give repetitions, always give distinct and accurate information only.""",
+    
+    """Answer questions related to events and activities that occurred on a specific day.
+    Provide a detailed account of the events,
+    Do not give repetitions, always give distinct and accurate information only."""
+]
+
+
+# Embeddings
+HFembeddings = HuggingFaceEmbeddings()
+
+
+
+hf_db = FAISS.from_texts(instructions, HFembeddings)
+
+def get_context(query, hf_db=hf_db):
+    context = hf_db.similarity_search(query)
+    return [i.page_content for i in context]
+
 if 'config' not in st.session_state.keys():
     st.session_state.config = reader.read_config('docs/config.yaml')
 
 config = st.session_state.config
-
+device = "cpu" #torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model_path = config['model_path']
 video_dir = config['videos']
 # Read MeanCLIP
@@ -67,9 +120,10 @@ st.markdown(title_alignment, unsafe_allow_html=True)
 
 @st.cache_resource       
 def load_models():
+    print("loading in model")
     #print("HF Token: ", HUGGINGFACEHUB_API_TOKEN)
     #model = AutoModelForCausalLM.from_pretrained(
-    #    model_path, torch_dtype=torch.float32, device_map='auto', trust_remote_code=True, token=HUGGINGFACEHUB_API_TOKEN
+    #    model_path, torch_dtype=torch.float32, device_map=device, trust_remote_code=True, token=HUGGINGFACEHUB_API_TOKEN
     #)
 
     #tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, token=HUGGINGFACEHUB_API_TOKEN)
@@ -86,22 +140,18 @@ def load_models():
 video_llama, tokenizer, streamer = load_models()
 vis_processor_cfg = video_llama.cfg.datasets_cfg.webvid.vis_processor.train
 vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
-
-chat = Chat(video_llama.model, vis_processor, device='cpu')
+print("-"*30)
+print("initializing model")
+chat = Chat(video_llama.model, vis_processor, device=device)
 
 def chat_reset(chat_state, img_list):
+    print("-"*30)
+    print("resetting chatState")
     if chat_state is not None:
         chat_state.messages = []
     if img_list is not None:
         img_list = []
     return chat_state, img_list
-
-#img_list = []
-#chat_state = conv_llava_llama_2.copy()
-#chat.upload_video_without_audio(video_path, chat_state, img_list)
-#_, chat_state = chat.ask(text_input, chat_state)
-#answer, chat_state, img_list = chat.answer(chat_state, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.1, max_length=2000, keep_conv_hist=True)
-#chat_state, img_list = chat_reset(chat_state, img_list)
 
 class VideoLLM(LLM):
         
@@ -123,7 +173,7 @@ class VideoLLM(LLM):
         chat.upload_video_without_audio(video_path, start_time, duration)
         chat.ask(text_input)#, chat_state)
         #answer = chat.answer(chat_state, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.1, max_length=2000, keep_conv_hist=True, streamer=streamer)
-        answer = chat.answer(max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.1, max_length=2000, keep_conv_hist=True, streamer=streamer)
+        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.02, max_length=2000, keep_conv_hist=True, streamer=streamer)
 
     def stream_res(self, video_path, text_input, chat, start_time, duration):
         #thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, chat_state, img_list, streamer))  # Pass streamer to _call
@@ -191,8 +241,8 @@ class CustomLLM(LLM):
         return "custom"
     
 def get_top_doc(results, qcnt):
-    if results == []:
-        return None, None
+    print("-"*30)
+    print("retrieving videos model")
     hit_score = {}
     for r in results:
         try:
@@ -213,6 +263,8 @@ def get_top_doc(results, qcnt):
     if qcnt >= len(x):
         return None, None
     print (f'top docs = {x}')
+    print("-"*30)
+    print("video retrieval done")
     return {'video': list(x)[qcnt]}, playback_offset
 
 def play_video(x, offset):
@@ -298,6 +350,8 @@ if 'qcnt' not in st.session_state.keys():
     st.session_state['qcnt'] = 0
 
 def handle_message():
+    print("-"*30)
+    print("starting message handling")
     # Generate a new response if last message is not from assistant
     if st.session_state.messages[-1]["role"] != "assistant":
         # Handle user messages here
@@ -321,12 +375,12 @@ def handle_message():
             else:
                 with col2:
                     play_video(video_name, playback_offset)
-                
+
                 full_response = ''
-                full_response = f"Most relevant retrieved video is **{video_name}** \n\n"
-                
+                full_response = f"Most relevant retrived video is **{video_name}** \n\n"
+                instruction = f"{get_context(prompt)[0]}: {prompt}"
                 #for new_text in st.session_state.llm.stream_res(formatted_prompt):
-                for new_text in st.session_state.llm.stream_res(video_name, prompt, chat, playback_offset, config['clip_duration']):
+                for new_text in st.session_state.llm.stream_res(video_name, instruction, chat, playback_offset, config['clip_duration']):
                     full_response += new_text
                     placeholder.markdown(full_response)
 
@@ -336,6 +390,8 @@ def handle_message():
                 #chat.clear()
                 placeholder.markdown(full_response)
         message = {"role": "assistant", "content": full_response}
+        print("-"*30)
+        print("message handling done")
         st.session_state.messages.append(message)
       
 def display_messages():
