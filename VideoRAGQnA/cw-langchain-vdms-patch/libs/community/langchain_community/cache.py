@@ -95,7 +95,7 @@ if TYPE_CHECKING:
 
 def _hash(_input: str) -> str:
     """Use a deterministic hashing approach."""
-    return hashlib.md5(_input.encode()).hexdigest()
+    return hashlib.sha256(_input.encode()).hexdigest()
 
 
 def _dump_generations_to_json(generations: RETURN_VAL_TYPE) -> str:
@@ -1604,7 +1604,7 @@ class SQLAlchemyMd5Cache(BaseCache):
 
     @staticmethod
     def get_md5(input_string: str) -> str:
-        return hashlib.md5(input_string.encode()).hexdigest()
+        return hashlib.sha256(input_string.encode()).hexdigest()
 
 
 ASTRA_DB_CACHE_DEFAULT_COLLECTION_NAME = "langchain_astradb_cache"
