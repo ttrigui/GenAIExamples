@@ -223,7 +223,7 @@ def play_video(x, offset):
         video_file = open(x, 'rb')
         video_bytes = video_file.read()
 
-        st.video(video_bytes, start_time=offset)
+        st.video(video_bytes, start_time=int(offset))
 
 if 'llm' not in st.session_state.keys():
     with st.spinner('Loading Models . . .'):
