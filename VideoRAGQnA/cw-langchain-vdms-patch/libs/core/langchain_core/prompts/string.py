@@ -81,7 +81,7 @@ def _get_jinja2_variables_from_template(template: str) -> Set[str]:
             "jinja2 not installed, which is needed to use the jinja2_formatter. "
             "Please install it with `pip install jinja2`."
         )
-    env = Environment()
+    env = Environment(autoescape=select_autoescape(['html', 'xml']))
     ast = env.parse(template)
     variables = meta.find_undeclared_variables(ast)
     return variables

@@ -26,7 +26,8 @@ def get_model() -> str:
         urlretrieve(tokenizer_url, "tokenizer.model")
     if not os.path.exists(local_filename):
         urlretrieve(model_url, local_filename)
-        os.system(f"python convert-unversioned-ggml-to-ggml.py . tokenizer.model")
+        subprocess.run(["python", "convert-unversioned-ggml-to-ggml.py", ".", "tokenizer.model"], check=True)
+
 
     return local_filename
 

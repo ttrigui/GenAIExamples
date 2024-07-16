@@ -71,7 +71,7 @@ def hash_string(s: str) -> str:
     Returns:
         (str): The hashed string.
     """
-    return hashlib.sha1(s.encode("utf-8")).hexdigest()
+    return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
 
 def load_json(json_path: Union[str, Path]) -> str:
