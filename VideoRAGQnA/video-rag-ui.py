@@ -20,19 +20,11 @@ HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
 from embedding.extract_vl_embedding import VLEmbeddingExtractor as VL
 from embedding.generate_store_embeddings import setup_meanclip_model 
 from embedding.video_llama.common.config import Config
-from embedding.video_llama.common.dist_utils import get_rank
 from embedding.video_llama.common.registry import registry
 from embedding.video_llama.conversation.conversation_video import Chat, Conversation, default_conversation,SeparatorStyle,conv_llava_llama_2
 import decord
 decord.bridge.set_bridge('torch')
 
-#%%
-# imports modules for registration
-from embedding.video_llama.datasets.builders import *
-from embedding.video_llama.models import *
-from embedding.video_llama.processors import *
-from embedding.video_llama.runners import *
-from embedding.video_llama.tasks import *
 
 set_seed(22)
 

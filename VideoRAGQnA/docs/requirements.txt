@@ -1,23 +1,20 @@
 setuptools==69.5.1
 packaging
-chromadb
 opencv-python-headless
 langchain-experimental
 open-clip-torch==2.24.0
 streamlit
 metafunctions
 sentence-transformers
-accelerate
 vdms
 tzlocal
 dateparser
+# video-llama requirements
+decord
+einops
+omegaconf
 pytorchvideo
 torch==1.13.1 --index-url https://download.pytorch.org/whl/cpu
 torchaudio==0.13.1 --index-url https://download.pytorch.org/whl/cpu
 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cpu
-einops
-ptflops
-decord
-easydict
-omegaconf
 webdataset
