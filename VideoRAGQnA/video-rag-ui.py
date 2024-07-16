@@ -79,7 +79,7 @@ instructions = [
 
 
 # Embeddings
-HFembeddings = HuggingFaceEmbeddings()
+HFembeddings = HuggingFaceEmbeddings(model_kwargs = {'device': 'cpu'})
 
 
 
@@ -166,9 +166,6 @@ class VideoLLM(LLM):
             streamer = None,  # Add streamer as an argument
         ):
         
-        print(" - - ")
-        print("  text_input:", text_input)
-        print(" - - ")
         
         chat.upload_video_without_audio(video_path, start_time, duration)
         chat.ask(text_input)#, chat_state)
