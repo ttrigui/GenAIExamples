@@ -38,6 +38,11 @@ video_ingest/
 
 ## Setup and Installation
 
+Install ffmpeg
+
+```bash
+apt install ffmpeg
+```
 Install pip requirements
 
 ```bash
