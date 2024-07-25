@@ -166,56 +166,7 @@ class VideoLLM(LLM):
 
     def stream_res(self, video_path, text_input, chat, start_time, duration):
         #thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, chat_state, img_list, streamer))  # Pass streamer to _call
-        thread = threading.Thread(target=self._call, args=(video_path, "<rag_prompt>"+text_input, chat, start_time, duration, streamer))  # Pass streamer to _call
-        thread.start()
-        
-        for text in streamer:
-            yield text
-
-    @property
-    def _identifying_params(self) -> Mapping[str, Any]:
-        return model_path # {"name_of_model": model_path}
-
-    @property
-    def _llm_type(self) -> str:
-        return "custom"
-
-class CustomLLM(LLM):
-        
-    @torch.inference_mode()
-    def _call(
-            self, 
-            prompt: str,
-            stop: Optional[List[str]] = None,
-            run_manager: Optional[CallbackManagerForLLMRun] = None,
-            streamer: Optional[TextIteratorStreamer] = None,  # Add streamer as an argument
-        ) -> str:
-        
-        tokens = tokenizer.encode(prompt, return_tensors='pt').to(model.device)
-        print(" - - ")
-        print("  prompt:", prompt)
-        print(" - - ")
-        
-        with torch.no_grad():
-            print(model.device)
-            print(tokens.device)
-            output = model.generate(input_ids = tokens,
-                                    max_new_tokens = 100,
-                                    num_return_sequences = 1,
-                                    num_beams = 1,
-                                    min_length = 1,
-                                    top_p = 0.9,
-                                    top_k = 50,
-                                    repetition_penalty = 1.2,
-                                    length_penalty = 1,
-                                    temperature = 0.1,
-                                    streamer=streamer,
-                                    # pad_token_id=tokenizer.eos_token_id,
-                                    do_sample=True
-                    )
-        
-    def stream_res(self, prompt):
-        thread = threading.Thread(target=self._call, args=(prompt, None, None, streamer))  # Pass streamer to _call
+        thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, start_time, duration, streamer))  # Pass streamer to _call
         thread.start()
         
         for text in streamer:
@@ -231,7 +182,6 @@ class CustomLLM(LLM):
     
 def get_top_doc(results, qcnt):
     print("-"*30)
-    print("retrieving videos model")
     hit_score = {}
     for r in results:
         try:
@@ -311,7 +261,7 @@ def clear_chat_history():
 def RAG(prompt):
     
     with st.status("Querying database . . . ", expanded=True) as status:
-        st.write('Retrieving 3 image docs') #1 text doc and 
+        st.write('Retrieving top-3 videos') #1 text doc and 
         results = st.session_state.vs.MultiModalRetrieval(prompt, top_k = 3) #n_texts = 1, n_images = 3)
         status.update(label="Retrieved Top matching video!", state="complete", expanded=False)
     print("---___---")
@@ -367,7 +317,8 @@ def handle_message():
 
                 full_response = ''
                 full_response = f"Most relevant retrived video is **{video_name}** \n\n"
-                instruction = f"{get_context(prompt)[0]}: {prompt}"
+                #instruction = f"Instruction: {get_context(prompt)[0]}\nQuestion: {prompt}"
+                instruction = f"Instruction: Describe the video content according to the user's question only if it includes the answer for the user's query. Otherwise, generate exactly:\'No related videos found in the database.\' and stop generating.\n User's question: {prompt}"
                 #for new_text in st.session_state.llm.stream_res(formatted_prompt):
                 for new_text in st.session_state.llm.stream_res(video_name, instruction, chat, playback_offset, config['clip_duration']):
                     full_response += new_text
@@ -380,7 +331,6 @@ def handle_message():
                 placeholder.markdown(full_response)
         message = {"role": "assistant", "content": full_response}
         print("-"*30)
-        print("message handling done")
         st.session_state.messages.append(message)
       
 def display_messages():
