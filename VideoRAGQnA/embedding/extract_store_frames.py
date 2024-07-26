@@ -34,14 +34,13 @@ def calculate_intervals(video_path, chunk_duration, clip_duration):
 def process_all_videos(config):
     path = config['videos']
     meta_output_dir = config['meta_output_dir']
-    N = config['number_of_frames_per_second']
     selected_db = config['vector_db']['choice_of_db']
     emb_path = config['embeddings']['path']
     emb_type = config['embeddings']['type']
     chunk_duration = config['chunk_duration']
     clip_duration = config['clip_duration']
 
-    def extract_frames(video_path, meta_output_dir, N, date_time, local_timezone):
+    def extract_frames(video_path, meta_output_dir, date_time, local_timezone):
         video = os.path.splitext(os.path.basename(video_path))[0]
         # Create a directory to store frames and metadata
         os.makedirs(meta_output_dir, exist_ok=True)
@@ -124,12 +123,7 @@ def process_all_videos(config):
         print(f"date_time of {video_path} being created : ",date_time)
         # Get the local timezone of the machine
         local_timezone = get_localzone()
-        if emb_type == 'frame':
-            fps, total_frames, metadata_file = extract_frames(video_path, meta_output_dir, N, date_time, local_timezone)
-            metadata[each_video].update({
-                'extracted_frame_metadata_file': metadata_file,
-            })
-        elif emb_type == 'video':
+        if emb_type == 'video':
             time_format = "%a %b %d %H:%M:%S %Y"
             if not isinstance(date_time, datetime.datetime):
                 date_time = datetime.datetime.strptime(date_time, time_format)

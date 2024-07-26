@@ -85,7 +85,7 @@ The current framework supports Intel's VDMS.
 
 Running VDMS DB as docker container
 ```bash
-docker run -d -p 55555:55555 intellabs/vdms:latest
+docker run -d --name vdms-rag -p 55555:55555 intellabs/vdms:latest
 ```
 
 **Note-1:** If you are not using file structure similar to what is described above, consider changing it in ```docs/config.yaml```.

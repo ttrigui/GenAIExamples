@@ -27,7 +27,7 @@ def load_video(video_path, start_time=0, duration=-1, n_frms=MAX_INT, height=-1,
     vr = VideoReader(uri=video_path, height=height, width=width)
     fps = vr.get_avg_fps()
     vlen = len(vr)
-    start, end = int(fps*start_time), min(vlen, int(fps*duration)) if duration != -1 else vlen
+    start, end = int(fps*start_time), min(vlen, int(fps*(start_time+duration))) if duration != -1 else vlen
 
     n_frms = min(n_frms, vlen)
 

@@ -204,7 +204,7 @@ def get_top_doc(results, qcnt):
     print (f'top docs = {x}')
     print("-"*30)
     print("video retrieval done")
-    return {'video': list(x)[qcnt]}, playback_offset
+    return {'video': list(x)[qcnt]}, int(playback_offset)
 
 def play_video(x, offset):
     if x is not None:
@@ -261,9 +261,9 @@ def clear_chat_history():
 def RAG(prompt):
     
     with st.status("Querying database . . . ", expanded=True) as status:
-        st.write('Retrieving top-3 videos') #1 text doc and 
+        st.write('Retrieving top-3 clips') #1 text doc and 
         results = st.session_state.vs.MultiModalRetrieval(prompt, top_k = 3) #n_texts = 1, n_images = 3)
-        status.update(label="Retrieved Top matching video!", state="complete", expanded=False)
+        status.update(label="Retrieved top matching clip!", state="complete", expanded=False)
     print("---___---")
     print (f'\tRAG prompt={prompt}')
     print("---___---")
@@ -274,7 +274,6 @@ def RAG(prompt):
     if top_doc == None:
         return None, None, None
     video_name = top_doc['video']
-    print('Video from top doc: ', video_name)
     
     return video_name, playback_offset, top_doc
 
@@ -306,7 +305,6 @@ def handle_message():
                 st.session_state['qcnt'] = 0
                 st.session_state['prevprompt'] = prompt
             video_name, playback_offset, top_doc = RAG(prompt)
-            print("VIDEO NAME USED IN PLAYBACK: ", video_name)
             if video_name == None:
                 full_response = f"No more relevant videos found. Select a different query. \n\n"
                 placeholder.markdown(full_response)
@@ -316,10 +314,11 @@ def handle_message():
                     play_video(video_name, playback_offset)
 
                 full_response = ''
-                full_response = f"Most relevant retrived video is **{video_name}** \n\n"
+                full_response = f"Top retrieved clip is **{os.path.basename(video_name)}** at timestamp {playback_offset} -> {playback_offset//60:02d}:{playback_offset%60:02d} \n\n"
                 #instruction = f"Instruction: {get_context(prompt)[0]}\nQuestion: {prompt}"
                 instruction = f"Instruction: Describe the video content according to the user's question only if it includes the answer for the user's query. Otherwise, generate exactly:\'No related videos found in the database.\' and stop generating.\n User's question: {prompt}"
                 #for new_text in st.session_state.llm.stream_res(formatted_prompt):
+                print("start_time:", playback_offset, "clip_duration:", config['clip_duration'])
                 for new_text in st.session_state.llm.stream_res(video_name, instruction, chat, playback_offset, config['clip_duration']):
                     full_response += new_text
                     placeholder.markdown(full_response)
