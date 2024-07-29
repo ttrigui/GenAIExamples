@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# Check if video-llama model exists
+if [ ! -e "./meta-llama/Llama-2-7b-chat-hf" ]; then
+    echo "Downloading video-llama model weights ..."
+    mkdir -p meta-llama/Llama-2-7b-chat-hf
+    cd meta-llama/Llama-2-7b-chat-hf
+    wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/config.json
+    wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/generation_config.json
+    wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/pytorch_model-00001-of-00002.bin
+    wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/pytorch_model-00002-of-00002.bin
+    wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/pytorch_model.bin.index.json
+    wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/special_tokens_map.json
+    wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/tokenizer.json
+    wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/tokenizer.model
+    wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/tokenizer_config.json
+    cd ../..
+else
+    echo "Found video-llama weights already downloaded."
+fi
+
 # Function to check if the container exists
 container_exists() {
     docker ps -a --format '{{.Names}}' | grep -Eq "^$1\$"
@@ -24,7 +43,7 @@ else
     docker run --rm -d --name vdms-rag -p 55555:55555 intellabs/vdms:latest
 fi
 
-# Remove the folder ./video/del/
+# Remove the folder ./video/video_metadata/
 if [ -d "./video_ingest/video_metadata" ]; then
     echo "Removing folder ./video_ingest/video_metadata ..."
     rm -rf ./video_ingest/video_metadata

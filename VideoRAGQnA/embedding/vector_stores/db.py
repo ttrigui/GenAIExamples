@@ -16,7 +16,10 @@ from einops import rearrange
 from PIL import Image
 import torch
 import uuid
-import os 
+import os
+import time
+import torchvision.transforms as T
+toPIL = T.ToPILImage()
 
 # 'similarity', 'similarity_score_threshold' (needs threshold), 'mmr'
 
@@ -107,16 +110,6 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
 
 
     def load_video_for_meanclip(self, vis_path, num_frm=64, max_img_size=224, **kwargs):
-        basename = os.path.splitext(os.path.basename(vis_path))[0]
-        tmp_name = f"tmp_{basename}"
-        import time
-        if not os.path.exists(tmp_name):
-            os.makedirs(tmp_name)
-            print("Preprocessing the video, please be patient ...")
-            t0=time.time()
-            os.system(f"ffmpeg -nostats -loglevel 0 -i {vis_path} -vf scale=336:-1 -q:v 2 {tmp_name}/img%03d.jpeg")
-            print(f"Video pre-processing took {time.time()-t0:.1f} sec")
-
         # Load video with VideoReader
         vr = VideoReader(vis_path, ctx=cpu(0))
         fps = vr.get_avg_fps()
@@ -129,11 +122,10 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
 
         # preprocess images
         clip_preprocess = get_transforms("clip", max_img_size)
-        for img_idx in frame_idx:
-            #im = clip_imgs[i]
-            im = Image.open(f'{tmp_name}/img{img_idx+1:03d}.jpeg')
-            clip_images.append(clip_preprocess(im)) # 3, 224, 224
-
+        temp_frms = vr.get_batch(frame_idx.astype(int).tolist())
+        for idx in range(temp_frms.shape[0]):
+            im = temp_frms[idx] # H W C
+            clip_images.append(clip_preprocess(toPIL(im.permute(2,0,1)))) # 3, 224, 224  as input to append
         clip_images_tensor = torch.zeros((num_frm,) + clip_images[0].shape)
         clip_images_tensor[:num_frm] = torch.stack(clip_images)
 

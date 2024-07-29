@@ -315,8 +315,8 @@ def handle_message():
 
                 full_response = ''
                 full_response = f"Top retrieved clip is **{os.path.basename(video_name)}** at timestamp {playback_offset} -> {playback_offset//60:02d}:{playback_offset%60:02d} \n\n"
-                #instruction = f"Instruction: {get_context(prompt)[0]}\nQuestion: {prompt}"
-                instruction = f"Instruction: Describe the video content according to the user's question only if it includes the answer for the user's query. Otherwise, generate exactly:\'No related videos found in the database.\' and stop generating.\n User's question: {prompt}"
+                instruction = f"Instruction: {get_context(prompt)[0]}\nQuestion: {prompt}"
+                #instruction = f"Instruction: Describe the video content according to the user's question only if it includes the answer for the user's query. Otherwise, generate exactly:\'No related videos found in the database.\' and stop generating.\n User's question: {prompt}"
                 #for new_text in st.session_state.llm.stream_res(formatted_prompt):
                 print("start_time:", playback_offset, "clip_duration:", config['clip_duration'])
                 for new_text in st.session_state.llm.stream_res(video_name, instruction, chat, playback_offset, config['clip_duration']):

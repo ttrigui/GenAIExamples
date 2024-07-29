@@ -1,5 +1,6 @@
 import os
 import time as t
+from tqdm import tqdm
 import cv2
 import json
 import datetime
@@ -114,13 +115,12 @@ def process_all_videos(config):
     # print (f'Total {len(videos)} videos will be processed')
     metadata = {}
     
-    for i, each_video in enumerate(videos):
+    for i, each_video in enumerate(tqdm(videos)):
         metadata[each_video] = {}
         keyname = each_video
         video_path = os.path.join(path, each_video)
         date_time = datetime.datetime.now()  # FIXME CHECK: is this correct? 
         #date_time = t.ctime(os.stat(video_path).st_ctime)
-        print(f"date_time of {video_path} being created : ",date_time)
         # Get the local timezone of the machine
         local_timezone = get_localzone()
         if emb_type == 'video':
@@ -174,7 +174,6 @@ def process_all_videos(config):
                 #'embedding_path': os.path.join(emb_path, each_video+".pt"),
                 'video_path': f'{os.path.join(path,each_video)}',
             })
-        print (f'✅  {i+1}/{len(videos)}')
     os.makedirs(meta_output_dir, exist_ok=True)
     metadata_file = os.path.join(meta_output_dir, f"metadata.json")
     with open(metadata_file, "w") as f:

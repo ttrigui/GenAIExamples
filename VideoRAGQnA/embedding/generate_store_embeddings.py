@@ -1,11 +1,6 @@
-# import sys
-# import os
-
-# sys.path.append('/path/to/parent')  # Replace with the actual path to the parent folder
-
-# from VideoRAGQnA.utils import config_reader as reader
 import sys
 import os
+from tqdm import tqdm
 
 # Add the parent directory of the current script to the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -105,8 +100,7 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
 
     total_videos = len(GMetadata.keys())
     
-    for idx, (video, data) in enumerate(GMetadata.items()):
-        print(f"Processing {video}")
+    for idx, (video, data) in enumerate(tqdm(GMetadata.items())):
         image_name_list = []
         embedding_list = []
         metadata_list = []
@@ -125,7 +119,6 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
                 )
             else:
                 print(f"ERROR: selected_db {vs.selected_db} not supported. Supported:[vdms]")
-        print (f'✅ {idx+1}/{total_videos} video {video}')
 
     # clean up tmp_ folders containing frames (jpeg)
     for i in os.listdir():

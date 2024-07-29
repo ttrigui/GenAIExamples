@@ -38,11 +38,6 @@ video_ingest/
 
 ## Setup and Installation
 
-Install ffmpeg
-
-```bash
-apt install ffmpeg
-```
 Install pip requirements
 
 ```bash
@@ -58,35 +53,18 @@ pip install -e .
 cd ../../../
 ```
 
-Download Llama-2-7b-chat-hf and video-llama models
-
+Run start.sh script for fresh start. This will download model weights if not exist and restart VDMS container if it's left open. 
 ```bash
-mkdir -p embedding/video_llama_weights
-cd embedding/video_llama_weights
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/VL_LLaMA_2_7B_Finetuned.pth
-
-cd ../../
-mkdir -p meta-llama/Llama-2-7b-chat-hf
-cd meta-llama/Llama-2-7b-chat-hf
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/config.json
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/generation_config.json
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/pytorch_model-00001-of-00002.bin
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/pytorch_model-00002-of-00002.bin
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/pytorch_model.bin.index.json
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/special_tokens_map.json
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/tokenizer.json
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/tokenizer.model
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/tokenizer_config.json
-cd ../..
+bash start.sh
 ```
 
-
-The current framework supports Intel's VDMS.
-
-Running VDMS DB as docker container
+After `start.sh`, if you stopped UI and want to reconnect to UI while keeping previously generated embeddings, execute `runUI.sh` to run UI app and connect to your app.
 ```bash
-docker run -d --name vdms-rag -p 55555:55555 intellabs/vdms:latest
+bash runUI.sh
 ```
+
+Now you'll find UI up and running once you type `<ip.to.remote.machine:50055>` and hit enter in your brower's address bar.
+
 
 **Note-1:** If you are not using file structure similar to what is described above, consider changing it in ```docs/config.yaml```.
 

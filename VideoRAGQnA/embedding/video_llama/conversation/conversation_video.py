@@ -158,8 +158,19 @@ conv_llava_llama_2 = Conversation(
     #system="You are a helpful language and vision assistant. "
     #       "You are able to understand the visual content that the user provides, "
     #       "and assist the user with a variety of tasks using natural language.",
+    #system="""You are Intel's RAG assistant who understands visual and textual content.
+    #Answer to user's question based on the video content from the video embeddings while obeying the provided generation instructions. If you don't know the answer, say exactly this: \'No related videos found in the database.\' and stop generating.""",
     system="""You are Intel's RAG assistant who understands visual and textual content.
-    Answer to user's question based on the video content from the video embeddings while obeying the provided generation instructions. If you don't know the answer, say exactly this: \'No related videos found in the database.\' and stop generating.""",
+    You will be provided with two things, video embeddings and user's RAG prompt.
+    You are supposed to understand video content from the video embeddings and provide answer to user's question.
+
+    As an assistant, you need to follow these Rules while answering questions:
+    Rules:
+    - Don't answer any question which is not related to provided video content.
+    - Don't be toxic and don't include harmful information.
+    - Give answer only if you find it in the video content, otherwise just say You don't have enough information to answer the question.
+    
+    Here are the video embeddings:""",
     roles=("USER", "ASSISTANT"),
     messages=(),
     offset=0,
