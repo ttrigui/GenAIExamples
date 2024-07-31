@@ -28,7 +28,6 @@ import decord
 decord.bridge.set_bridge('torch')
 
 
-set_seed(22)
 
 instructions = [
     """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the video content. 
@@ -181,40 +180,20 @@ class VideoLLM(LLM):
         return "custom"
     
 def get_top_doc(results, qcnt):
-    print("-"*30)
-    hit_score = {}
-    for r in results:
-        try:
-            video_name = r.metadata['video']
-            #playback_offset = r.metadata["start of interval in sec"]
-            playback_offset = r.metadata["timestamp"]
-            if video_name not in hit_score.keys(): hit_score[video_name] = 0
-            hit_score[video_name] += 1
-        except:
-            r,score = r
-            video_name = r.metadata['video_path']
-            #playback_offset = r.metadata["start of interval in sec"]
-            playback_offset = r.metadata["timestamp"]
-            hit_score[video_name] = score
+    if qcnt < len(results):
+        print("video retrieval done")
+        return results[qcnt]
+    return None
 
-    x = dict(sorted(hit_score.items(), key=lambda item: -item[1]))
-    
-    if qcnt >= len(x):
-        return None, None
-    print (f'top docs = {x}')
-    print("-"*30)
-    print("video retrieval done")
-    return {'video': list(x)[qcnt]}, int(playback_offset)
-
-def play_video(x, offset):
+def play_video(x, offset, duration):
     if x is not None:
-        #video_file = x.replace('.pt', '')
-        #path = video_dir + video_file
-        #video_file = open(path, 'rb')
         video_file = open(x, 'rb')
         video_bytes = video_file.read()
-
         st.video(video_bytes, start_time=int(offset))
+        
+        #video_bytes = extract_clip_with_opencv(x, offset, duration)
+        #print("len-video_bytes:", len(video_bytes))
+        #st.video(video_bytes, start_time=0)
 
 if 'llm' not in st.session_state.keys():
     with st.spinner('Loading Models . . .'):
@@ -268,14 +247,17 @@ def RAG(prompt):
     print (f'\tRAG prompt={prompt}')
     print("---___---")
       
-    top_doc, playback_offset = get_top_doc(results, st.session_state["qcnt"])
-    print ('TOP DOC = ', top_doc)
-    print("PLAYBACK OFFSET = ", playback_offset)
-    if top_doc == None:
-        return None, None, None
-    video_name = top_doc['video']
+    result = get_top_doc(results, st.session_state["qcnt"])
+    if result == None:
+        return None
+    try:
+        top_doc, score = result
+    except:
+        top_doc = result
+    print('TOP DOC = ', top_doc.metadata['video'])
+    print("PLAYBACK OFFSET = ", top_doc.metadata['timestamp'])
     
-    return video_name, playback_offset, top_doc
+    return top_doc
 
 st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
@@ -304,22 +286,22 @@ def handle_message():
             else:
                 st.session_state['qcnt'] = 0
                 st.session_state['prevprompt'] = prompt
-            video_name, playback_offset, top_doc = RAG(prompt)
-            if video_name == None:
+            top_doc = RAG(prompt)
+            if top_doc == None:
                 full_response = f"No more relevant videos found. Select a different query. \n\n"
                 placeholder.markdown(full_response)
                 end = time.time()
             else:
+                video_name, playback_offset, video_path = top_doc.metadata['video'], int(top_doc.metadata['timestamp']), top_doc.metadata['video_path']
                 with col2:
-                    play_video(video_name, playback_offset)
+                    play_video(video_path, playback_offset, config['clip_duration'])
 
                 full_response = ''
                 full_response = f"Top retrieved clip is **{os.path.basename(video_name)}** at timestamp {playback_offset} -> {playback_offset//60:02d}:{playback_offset%60:02d} \n\n"
                 instruction = f"Instruction: {get_context(prompt)[0]}\nQuestion: {prompt}"
                 #instruction = f"Instruction: Describe the video content according to the user's question only if it includes the answer for the user's query. Otherwise, generate exactly:\'No related videos found in the database.\' and stop generating.\n User's question: {prompt}"
                 #for new_text in st.session_state.llm.stream_res(formatted_prompt):
-                print("start_time:", playback_offset, "clip_duration:", config['clip_duration'])
-                for new_text in st.session_state.llm.stream_res(video_name, instruction, chat, playback_offset, config['clip_duration']):
+                for new_text in st.session_state.llm.stream_res(video_path, instruction, chat, playback_offset, config['clip_duration']):
                     full_response += new_text
                     placeholder.markdown(full_response)
 

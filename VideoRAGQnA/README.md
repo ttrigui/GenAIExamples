@@ -10,7 +10,7 @@ Video RAG is a framework that retrieves video based on provided user prompt. It 
 - **UI**: streamlit
 - **Vector Storage**: Intel's VDMS
 - **Video Embeddings**: CLIP w/ mean aggragation
-- **RAG Retriever**: Langchain Ensemble Retrieval
+- **RAG Retriever**: Langchain MultiModal Retrieval
 - **LLM**: Llama-2-7b-chat-hf
 
 ## Prerequisites
@@ -46,13 +46,6 @@ conda create --name vrag python=3.9 && conda activate vrag
 pip install -r docs/requirements.txt
 ```
 
-This code is using a pre-released update of vdms vectordb in LangChain.
-```bash
-cd cw-langchain-vdms-patch/libs/community
-pip install -e .
-cd ../../../
-```
-
 Run start.sh script for fresh start. This will download model weights if not exist and restart VDMS container if it's left open. 
 ```bash
 bash start.sh
@@ -63,15 +56,12 @@ After `start.sh`, if you stopped UI and want to reconnect to UI while keeping pr
 bash runUI.sh
 ```
 
-Now you'll find UI up and running once you type `<ip.to.remote.machine:50055>` and hit enter in your brower's address bar.
+Now you'll find UI up and running once you type `<ip.to.remote.machine>:50055` and hit enter in your brower's address bar.
 
 
 **Note-1:** If you are not using file structure similar to what is described above, consider changing it in ```docs/config.yaml```.
 
 **Note-2:** Update your choice of db and port in ```docs/config.yaml```.
 
-**Web UI Video RAG**
-```bash
-streamlit run video-rag-ui.py docs/config.yaml --server.address 0.0.0.0 --server.port 50055
-```
+
 
