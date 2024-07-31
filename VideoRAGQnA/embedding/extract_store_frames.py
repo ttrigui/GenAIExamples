@@ -132,7 +132,7 @@ def process_all_videos(config):
             date = date_time.strftime("%Y-%m-%d")
             year, month, day = map(int, date.split("-"))
 
-            if clip_duration is not None and chunk_duration is not None and clip_duration < chunk_duration:
+            if clip_duration is not None and chunk_duration is not None and clip_duration <= chunk_duration:
                 interval_count = 0
                 metadata.pop(each_video)
                 for start_frame, end_frame, start_time, end_time in calculate_intervals(video_path, chunk_duration, clip_duration):
