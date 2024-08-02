@@ -14,7 +14,6 @@ import json
 import os
 import argparse
 import torch
-from langchain_experimental.open_clip import OpenCLIPEmbeddings
 from embedding.meanclip_modeling.model import MeanCLIP
 from embedding.meanclip_modeling.clip_model import CLIP
 from utils import config_reader as reader
@@ -176,12 +175,7 @@ def main():
     print ('Creating DB with video embedding and metadata support, \nIt may take few minutes to download and load all required models if you are running for first time.')
     print('Connecting to {} at {}:{}'.format(selected_db, host, port))
 
-    if config['embeddings']['type'] == 'frame':
-        vs = db.VS(host, port, selected_db)
-        # EMBEDDING MODEL
-        model = OpenCLIPEmbeddings(model_name="ViT-g-14", checkpoint="laion2b_s34b_b88k")
-
-    elif config['embeddings']['type'] == 'video':
+    if config['embeddings']['type'] == 'video':
         # init meanclip model
         model, _ = setup_meanclip_model(meanclip_cfg, device="cpu")
         vs = db.VideoVS(host, port, selected_db, model)

@@ -1,6 +1,5 @@
 from langchain_community.vectorstores import VDMS
 from langchain_community.vectorstores.vdms import VDMS_Client
-from langchain_experimental.open_clip import OpenCLIPEmbeddings
 from langchain.pydantic_v1 import BaseModel, root_validator
 from langchain_core.embeddings import Embeddings
 from decord import VideoReader, cpu

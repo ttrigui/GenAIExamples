@@ -44,6 +44,8 @@ Install pip requirements
 cd VideoRAGQnA
 conda create --name vrag python=3.9 && conda activate vrag
 pip install -r docs/requirements.txt
+git clone https://github.com/langchain-ai/langchain
+pip install -e langchain/libs/community
 ```
 
 Run start.sh script for fresh start. This will download model weights if not exist and restart VDMS container if it's left open. 

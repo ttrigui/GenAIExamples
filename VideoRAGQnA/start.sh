@@ -2,7 +2,7 @@
 
 # Check if video-llama model exists
 if [ ! -e "./meta-llama/Llama-2-7b-chat-hf" ]; then
-    echo "Downloading video-llama model weights ..."
+    echo "Downloading llama-2-7b-chat-hf model weights ..."
     mkdir -p meta-llama/Llama-2-7b-chat-hf
     cd meta-llama/Llama-2-7b-chat-hf
     wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/config.json
@@ -16,7 +16,16 @@ if [ ! -e "./meta-llama/Llama-2-7b-chat-hf" ]; then
     wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/tokenizer_config.json
     cd ../..
 else
-    echo "Found video-llama weights already downloaded."
+    echo "Found llama weights already downloaded."
+fi
+if [ ! -e "./embedding/video_llama_weights" ]; then
+    echo "Downloading VL_LLaMA_2_7B_Finetuned weights ..."
+    mkdir -p embedding/video_llama_weights
+    cd embedding/video_llama_weights
+    wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/VL_LLaMA_2_7B_Finetuned.pth
+    cd ../..
+else
+    echo "Found video-llama VL branch weights already downloaded."
 fi
 
 # Function to check if the container exists
