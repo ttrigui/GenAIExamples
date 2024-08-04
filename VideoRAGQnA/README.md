@@ -10,7 +10,7 @@ Video RAG is a framework that retrieves video based on provided user prompt. It 
 - **UI**: streamlit
 - **Vector Storage**: Intel's VDMS
 - **Video Embeddings**: CLIP w/ mean aggragation
-- **RAG Retriever**: Langchain Ensemble Retrieval
+- **RAG Retriever**: Langchain MultiModal Retrieval
 - **LLM**: Llama-2-7b-chat-hf
 
 ## Prerequisites
@@ -38,62 +38,32 @@ video_ingest/
 
 ## Setup and Installation
 
-Install ffmpeg
-
-```bash
-apt install ffmpeg
-```
 Install pip requirements
 
 ```bash
 cd VideoRAGQnA
 conda create --name vrag python=3.9 && conda activate vrag
 pip install -r docs/requirements.txt
+git clone https://github.com/langchain-ai/langchain
+pip install -e langchain/libs/community
 ```
 
-This code is using a pre-released update of vdms vectordb in LangChain.
+Run start.sh script for fresh start. This will download model weights if not exist and restart VDMS container if it's left open. 
 ```bash
-cd cw-langchain-vdms-patch/libs/community
-pip install -e .
-cd ../../../
+bash start.sh
 ```
 
-Download Llama-2-7b-chat-hf and video-llama models
-
+After `start.sh`, if you stopped UI and want to reconnect to UI while keeping previously generated embeddings, execute `runUI.sh` to run UI app and connect to your app.
 ```bash
-mkdir -p embedding/video_llama_weights
-cd embedding/video_llama_weights
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/VL_LLaMA_2_7B_Finetuned.pth
-
-cd ../../
-mkdir -p meta-llama/Llama-2-7b-chat-hf
-cd meta-llama/Llama-2-7b-chat-hf
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/config.json
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/generation_config.json
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/pytorch_model-00001-of-00002.bin
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/pytorch_model-00002-of-00002.bin
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/pytorch_model.bin.index.json
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/special_tokens_map.json
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/tokenizer.json
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/tokenizer.model
-wget https://huggingface.co/DAMO-NLP-SG/Video-LLaMA-2-7B-Finetuned/resolve/main/llama-2-7b-chat-hf/tokenizer_config.json
-cd ../..
+bash runUI.sh
 ```
 
+Now you'll find UI up and running once you type `<ip.to.remote.machine>:50055` and hit enter in your brower's address bar.
 
-The current framework supports Intel's VDMS.
-
-Running VDMS DB as docker container
-```bash
-docker run -d -p 55555:55555 intellabs/vdms:latest
-```
 
 **Note-1:** If you are not using file structure similar to what is described above, consider changing it in ```docs/config.yaml```.
 
 **Note-2:** Update your choice of db and port in ```docs/config.yaml```.
 
-**Web UI Video RAG**
-```bash
-streamlit run video-rag-ui.py docs/config.yaml --server.address 0.0.0.0 --server.port 50055
-```
+
 

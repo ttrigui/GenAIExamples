@@ -12,9 +12,6 @@ vl_branch:
   model_type: 'llama_v2'
 # Path to store metadata files
 meta_output_dir: video_ingest/video_metadata/
-# Number of frames to extract per second, 
-# if 24 fps, and this value is 2, then it will extract 12th and 24th frame
-number_of_frames_per_second: 2
 # Chunk duration defines the interval of time that each embedding will occur
 chunk_duration: 30
 # Clip duration defines the length of the interval in which the embeding will occur

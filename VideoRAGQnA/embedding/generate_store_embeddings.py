@@ -1,11 +1,6 @@
-# import sys
-# import os
-
-# sys.path.append('/path/to/parent')  # Replace with the actual path to the parent folder
-
-# from VideoRAGQnA.utils import config_reader as reader
 import sys
 import os
+from tqdm import tqdm
 
 # Add the parent directory of the current script to the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -19,7 +14,6 @@ import json
 import os
 import argparse
 import torch
-from langchain_experimental.open_clip import OpenCLIPEmbeddings
 from embedding.meanclip_modeling.model import MeanCLIP
 from embedding.meanclip_modeling.clip_model import CLIP
 from utils import config_reader as reader
@@ -105,47 +99,13 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
 
     total_videos = len(GMetadata.keys())
     
-    for idx, (video, data) in enumerate(GMetadata.items()):
-
+    for idx, (video, data) in enumerate(tqdm(GMetadata.items())):
         image_name_list = []
         embedding_list = []
         metadata_list = []
         ids = []
         
-        if config['embeddings']['type'] == 'frame':
-            # process frames
-            frame_metadata = read_json(data['extracted_frame_metadata_file'])
-            for frame_id, frame_details in frame_metadata.items():
-                global_counter += 1
-                if vs.selected_db == 'vdms':
-                    meta_data = {
-                        'timestamp': frame_details['timestamp'],
-                        'frame_path': frame_details['frame_path'],
-                        'video': video,
-                        #'embedding_path': data['embedding_path'],
-                        'date_time': frame_details['date_time'], #{"_date":frame_details['date_time']},
-                        'date': frame_details['date'],
-                        'year': frame_details['year'],
-                        'month': frame_details['month'],
-                        'day': frame_details['day'],
-                        'time': frame_details['time'],
-                        'hours': frame_details['hours'],
-                        'minutes': frame_details['minutes'],
-                        'seconds': frame_details['seconds'],
-                    }
-
-                image_path = frame_details['frame_path']
-                image_name_list.append(image_path)
-
-                metadata_list.append(meta_data)
-                ids.append(str(global_counter))
-                # print('datetime',meta_data['date_time'])
-
-            vs.add_images(
-                uris=image_name_list,
-                metadatas=metadata_list
-            )
-        elif config['embeddings']['type'] == 'video':
+        if config['embeddings']['type'] == 'video':
             data['video'] = video
             video_name_list = [data["video_path"]]
             metadata_list = [data]
@@ -158,7 +118,14 @@ def store_into_vectordb(vs, metadata_file_path, embedding_model, config):
                 )
             else:
                 print(f"ERROR: selected_db {vs.selected_db} not supported. Supported:[vdms]")
-        print (f'✅ {idx+1}/{total_videos} video {video}')
+
+    # clean up tmp_ folders containing frames (jpeg)
+    for i in os.listdir():
+        if i.startswith("tmp_"):
+            print("removing tmp_*")
+            os.system(f"rm -r tmp_*")
+            print("done.")
+            break
 
 def generate_embeddings(config, embedding_model, vs):
     process_all_videos(config)
@@ -198,7 +165,6 @@ def main():
     #embed_frames = config['embed_frames']
     path = config['videos'] #args.videos_folder #
     meta_output_dir = config['meta_output_dir']
-    N = config['number_of_frames_per_second']
     emb_path = config['embeddings']['path']
 
     host = VECTORDB_SERVICE_HOST_IP
@@ -209,12 +175,7 @@ def main():
     print ('Creating DB with video embedding and metadata support, \nIt may take few minutes to download and load all required models if you are running for first time.')
     print('Connecting to {} at {}:{}'.format(selected_db, host, port))
 
-    if config['embeddings']['type'] == 'frame':
-        vs = db.VS(host, port, selected_db)
-        # EMBEDDING MODEL
-        model = OpenCLIPEmbeddings(model_name="ViT-g-14", checkpoint="laion2b_s34b_b88k")
-
-    elif config['embeddings']['type'] == 'video':
+    if config['embeddings']['type'] == 'video':
         # init meanclip model
         model, _ = setup_meanclip_model(meanclip_cfg, device="cpu")
         vs = db.VideoVS(host, port, selected_db, model)

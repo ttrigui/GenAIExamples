@@ -1,7 +1,6 @@
 setuptools==69.5.1
 packaging
 opencv-python-headless
-langchain-experimental
 open-clip-torch==2.24.0
 streamlit
 metafunctions

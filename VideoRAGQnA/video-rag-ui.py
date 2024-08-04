@@ -28,7 +28,6 @@ import decord
 decord.bridge.set_bridge('torch')
 
 
-set_seed(22)
 
 instructions = [
     """ Identify the person [with specific features / seen at a specific location / performing a specific action] in the provided data based on the video content. 
@@ -166,56 +165,7 @@ class VideoLLM(LLM):
 
     def stream_res(self, video_path, text_input, chat, start_time, duration):
         #thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, chat_state, img_list, streamer))  # Pass streamer to _call
-        thread = threading.Thread(target=self._call, args=(video_path, "<rag_prompt>"+text_input, chat, start_time, duration, streamer))  # Pass streamer to _call
-        thread.start()
-        
-        for text in streamer:
-            yield text
-
-    @property
-    def _identifying_params(self) -> Mapping[str, Any]:
-        return model_path # {"name_of_model": model_path}
-
-    @property
-    def _llm_type(self) -> str:
-        return "custom"
-
-class CustomLLM(LLM):
-        
-    @torch.inference_mode()
-    def _call(
-            self, 
-            prompt: str,
-            stop: Optional[List[str]] = None,
-            run_manager: Optional[CallbackManagerForLLMRun] = None,
-            streamer: Optional[TextIteratorStreamer] = None,  # Add streamer as an argument
-        ) -> str:
-        
-        tokens = tokenizer.encode(prompt, return_tensors='pt').to(model.device)
-        print(" - - ")
-        print("  prompt:", prompt)
-        print(" - - ")
-        
-        with torch.no_grad():
-            print(model.device)
-            print(tokens.device)
-            output = model.generate(input_ids = tokens,
-                                    max_new_tokens = 100,
-                                    num_return_sequences = 1,
-                                    num_beams = 1,
-                                    min_length = 1,
-                                    top_p = 0.9,
-                                    top_k = 50,
-                                    repetition_penalty = 1.2,
-                                    length_penalty = 1,
-                                    temperature = 0.1,
-                                    streamer=streamer,
-                                    # pad_token_id=tokenizer.eos_token_id,
-                                    do_sample=True
-                    )
-        
-    def stream_res(self, prompt):
-        thread = threading.Thread(target=self._call, args=(prompt, None, None, streamer))  # Pass streamer to _call
+        thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, start_time, duration, streamer))  # Pass streamer to _call
         thread.start()
         
         for text in streamer:
@@ -230,41 +180,20 @@ class CustomLLM(LLM):
         return "custom"
     
 def get_top_doc(results, qcnt):
-    print("-"*30)
-    print("retrieving videos model")
-    hit_score = {}
-    for r in results:
-        try:
-            video_name = r.metadata['video']
-            #playback_offset = r.metadata["start of interval in sec"]
-            playback_offset = r.metadata["timestamp"]
-            if video_name not in hit_score.keys(): hit_score[video_name] = 0
-            hit_score[video_name] += 1
-        except:
-            r,score = r
-            video_name = r.metadata['video_path']
-            #playback_offset = r.metadata["start of interval in sec"]
-            playback_offset = r.metadata["timestamp"]
-            hit_score[video_name] = score
+    if qcnt < len(results):
+        print("video retrieval done")
+        return results[qcnt]
+    return None
 
-    x = dict(sorted(hit_score.items(), key=lambda item: -item[1]))
-    
-    if qcnt >= len(x):
-        return None, None
-    print (f'top docs = {x}')
-    print("-"*30)
-    print("video retrieval done")
-    return {'video': list(x)[qcnt]}, playback_offset
-
-def play_video(x, offset):
+def play_video(x, offset, duration):
     if x is not None:
-        #video_file = x.replace('.pt', '')
-        #path = video_dir + video_file
-        #video_file = open(path, 'rb')
         video_file = open(x, 'rb')
         video_bytes = video_file.read()
-
         st.video(video_bytes, start_time=int(offset))
+        
+        #video_bytes = extract_clip_with_opencv(x, offset, duration)
+        #print("len-video_bytes:", len(video_bytes))
+        #st.video(video_bytes, start_time=0)
 
 if 'llm' not in st.session_state.keys():
     with st.spinner('Loading Models . . .'):
@@ -311,22 +240,24 @@ def clear_chat_history():
 def RAG(prompt):
     
     with st.status("Querying database . . . ", expanded=True) as status:
-        st.write('Retrieving 3 image docs') #1 text doc and 
+        st.write('Retrieving top-3 clips') #1 text doc and 
         results = st.session_state.vs.MultiModalRetrieval(prompt, top_k = 3) #n_texts = 1, n_images = 3)
-        status.update(label="Retrieved Top matching video!", state="complete", expanded=False)
+        status.update(label="Retrieved top matching clip!", state="complete", expanded=False)
     print("---___---")
     print (f'\tRAG prompt={prompt}')
     print("---___---")
       
-    top_doc, playback_offset = get_top_doc(results, st.session_state["qcnt"])
-    print ('TOP DOC = ', top_doc)
-    print("PLAYBACK OFFSET = ", playback_offset)
-    if top_doc == None:
-        return None, None, None
-    video_name = top_doc['video']
-    print('Video from top doc: ', video_name)
+    result = get_top_doc(results, st.session_state["qcnt"])
+    if result == None:
+        return None
+    try:
+        top_doc, score = result
+    except:
+        top_doc = result
+    print('TOP DOC = ', top_doc.metadata['video'])
+    print("PLAYBACK OFFSET = ", top_doc.metadata['timestamp'])
     
-    return video_name, playback_offset, top_doc
+    return top_doc
 
 st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
@@ -355,21 +286,22 @@ def handle_message():
             else:
                 st.session_state['qcnt'] = 0
                 st.session_state['prevprompt'] = prompt
-            video_name, playback_offset, top_doc = RAG(prompt)
-            print("VIDEO NAME USED IN PLAYBACK: ", video_name)
-            if video_name == None:
+            top_doc = RAG(prompt)
+            if top_doc == None:
                 full_response = f"No more relevant videos found. Select a different query. \n\n"
                 placeholder.markdown(full_response)
                 end = time.time()
             else:
+                video_name, playback_offset, video_path = top_doc.metadata['video'], int(top_doc.metadata['timestamp']), top_doc.metadata['video_path']
                 with col2:
-                    play_video(video_name, playback_offset)
+                    play_video(video_path, playback_offset, config['clip_duration'])
 
                 full_response = ''
-                full_response = f"Most relevant retrived video is **{video_name}** \n\n"
-                instruction = f"{get_context(prompt)[0]}: {prompt}"
+                full_response = f"Top retrieved clip is **{os.path.basename(video_name)}** at timestamp {playback_offset} -> {playback_offset//60:02d}:{playback_offset%60:02d} \n\n"
+                instruction = f"Instruction: {get_context(prompt)[0]}\nQuestion: {prompt}"
+                #instruction = f"Instruction: Describe the video content according to the user's question only if it includes the answer for the user's query. Otherwise, generate exactly:\'No related videos found in the database.\' and stop generating.\n User's question: {prompt}"
                 #for new_text in st.session_state.llm.stream_res(formatted_prompt):
-                for new_text in st.session_state.llm.stream_res(video_name, instruction, chat, playback_offset, config['clip_duration']):
+                for new_text in st.session_state.llm.stream_res(video_path, instruction, chat, playback_offset, config['clip_duration']):
                     full_response += new_text
                     placeholder.markdown(full_response)
 
@@ -380,7 +312,6 @@ def handle_message():
                 placeholder.markdown(full_response)
         message = {"role": "assistant", "content": full_response}
         print("-"*30)
-        print("message handling done")
         st.session_state.messages.append(message)
       
 def display_messages():

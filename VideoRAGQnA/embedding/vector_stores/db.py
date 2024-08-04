@@ -1,6 +1,5 @@
 from langchain_community.vectorstores import VDMS
 from langchain_community.vectorstores.vdms import VDMS_Client
-from langchain_experimental.open_clip import OpenCLIPEmbeddings
 from langchain.pydantic_v1 import BaseModel, root_validator
 from langchain_core.embeddings import Embeddings
 from decord import VideoReader, cpu
@@ -16,6 +15,10 @@ from einops import rearrange
 from PIL import Image
 import torch
 import uuid
+import os
+import time
+import torchvision.transforms as T
+toPIL = T.ToPILImage()
 
 # 'similarity', 'similarity_score_threshold' (needs threshold), 'mmr'
 
@@ -29,7 +32,7 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
     model_name: str = "ViT-H-14"
     checkpoint: str = "laion2b_s32b_b79k"
 
-    @root_validator()
+    @root_validator(allow_reuse=True)
     def validate_environment(cls, values: Dict) -> Dict:
         """Validate that open_clip and torch libraries are installed."""
         try:
@@ -116,24 +119,12 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
         frame_idx = np.linspace(start_idx, end_idx, num=num_frm, endpoint=False, dtype=int) # Uniform sampling
         clip_images = []
 
-        # Extract frames as numpy array
-        #img_array = vr.get_batch(frame_idx).asnumpy() # img_array = [T,H,W,C]
-        #clip_imgs = [Image.fromarray(img_array[j]) for j in range(img_array.shape[0])]
-        # write jpeg to tmp
-        import os 
-        os.makedirs('tmp', exist_ok=True)
-        os.system(f"ffmpeg -nostats -loglevel 0 -i {vis_path} -q:v 2 tmp/img%03d.jpeg")
-        #print("vis_path:", vis_path)
-        #print("frame_idx:", frame_idx)
-
         # preprocess images
         clip_preprocess = get_transforms("clip", max_img_size)
-        for img_idx in frame_idx:
-            #im = clip_imgs[i]
-            im = Image.open(f'tmp/img{img_idx+1:03d}.jpeg')
-            clip_images.append(clip_preprocess(im)) # 3, 224, 224
-
-        os.system("rm -r tmp")
+        temp_frms = vr.get_batch(frame_idx.astype(int).tolist())
+        for idx in range(temp_frms.shape[0]):
+            im = temp_frms[idx] # H W C
+            clip_images.append(clip_preprocess(toPIL(im.permute(2,0,1)))) # 3, 224, 224  as input to append
         clip_images_tensor = torch.zeros((num_frm,) + clip_images[0].shape)
         clip_images_tensor[:num_frm] = torch.stack(clip_images)
 
@@ -161,7 +152,6 @@ class VideoVS:
         if self.selected_db == 'vdms':
             print ('Connecting to VDMS db server . . .')
             self.client = VDMS_Client(host=self.host, port=self.port)
-        print("self.client:", self.client)
 
     def init_db(self):
         print ('Loading db instances')

@@ -158,19 +158,19 @@ conv_llava_llama_2 = Conversation(
     #system="You are a helpful language and vision assistant. "
     #       "You are able to understand the visual content that the user provides, "
     #       "and assist the user with a variety of tasks using natural language.",
-    system="You are Intel's RAG assistant who understands visual and textual content. \
-    You will be provided with two things, video embeddings and user's RAG prompt. \
-    You are supposed to understand video content from the video embeddings \
-and provide answer to user's question. \
-\
-As an assistant, you need to follow these Rules while answering questions,\
-\
-Rules:\
-- Don't answer any question which is not related to provied video content.\
-- Don't be toxic and don't include harmful information.\
-- Give answer only if you find it in the video conent, otherwise just say You don't have enough information to answer the question.\
-\
-Here are the video embeddings:",
+    #system="""You are Intel's RAG assistant who understands visual and textual content.
+    #Answer to user's question based on the video content from the video embeddings while obeying the provided generation instructions. If you don't know the answer, say exactly this: \'No related videos found in the database.\' and stop generating.""",
+    system="""You are Intel's RAG assistant who understands visual and textual content.
+    You will be provided with two things, video embeddings and user's RAG prompt.
+    You are supposed to understand video content from the video embeddings and provide answer to user's question.
+
+    As an assistant, you need to follow these Rules while answering questions:
+    Rules:
+    - Don't answer any question which is not related to provided video content.
+    - Don't be toxic and don't include harmful information.
+    - Give answer only if you find it in the video content, otherwise just say You don't have enough information to answer the question.
+    
+    Here are the video embeddings:""",
     roles=("USER", "ASSISTANT"),
     messages=(),
     offset=0,
@@ -295,7 +295,7 @@ class Chat:
                 # conv.system = "You can understand the video that the user provides. Follow the instructions carefully and explain your answers in detail."
                 image_emb, _ = self.model.encode_videoQformer_visual(video)
                 self.img_list.append(image_emb)
-                self.conv.append_message(self.conv.roles[0], "<Video><ImageHere></Video> "+ msg)
+                self.conv.append_message(self.conv.roles[0], "Video content: <Video><ImageHere></Video> "+ msg)
             self.video_msg = msg
             #print(f"chat.upload_video - len(img_list): {len(self.img_list)}, AL-branch_out: audio_emb.size():{audio_emb.size()}, VL-branch_out: image_emb.size():{image_emb.size()}")
             return "Received."
@@ -318,7 +318,6 @@ class Chat:
             # print(image)
         else:
             raise NotImplementedError
-        
         
         # conv.system = "You can understand the video that the user provides.  Follow the instructions carefully and explain your answers in detail."
         image_emb, _ = self.model.encode_videoQformer_visual(video) 
@@ -355,9 +354,11 @@ class Chat:
 
     def get_context_emb(self, keep_conv_hist=True):
         prompt = self.conv.get_prompt()
-        prompt_segs = prompt.split("<rag_prompt>")
-        prompt_segs.insert(1, "The user wants to know:")
-        prompt_segs = "".join(prompt_segs).split('<ImageHere>')
+        print("--_--_--_-_"*5)
+        print("LLM input prompt:\n\n")
+        print(prompt)
+        print("\n\n","--_--_--_-_"*5)
+        prompt_segs = prompt.split('<ImageHere>')
         #print(f"chat.get_context_emb - prompt_segs before keep_conv_hist block:\n  {prompt_segs}")
         #print("len(conv.messages):", len(self.conv.messages))
         if len(self.conv.messages) > 2 and not keep_conv_hist: # forget previous answers and reply to the question with provided image/audio embs

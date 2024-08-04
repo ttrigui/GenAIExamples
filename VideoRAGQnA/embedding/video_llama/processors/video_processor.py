@@ -27,15 +27,16 @@ def load_video(video_path, start_time=0, duration=-1, n_frms=MAX_INT, height=-1,
     vr = VideoReader(uri=video_path, height=height, width=width)
     fps = vr.get_avg_fps()
     vlen = len(vr)
-    start, end = int(fps*start_time), min(vlen, int(fps*duration)) if duration != -1 else vlen
+    start, end = int(fps*start_time), min(vlen, int(fps*(start_time+duration))) if duration != -1 else vlen
+    dur = min(vlen/fps,duration) if duration != -1 else vlen/fps
 
     n_frms = min(n_frms, vlen)
 
     if sampling == "uniform":
-        indices = np.arange(start, end, vlen / n_frms).astype(int).tolist()
+        indices = np.arange(start, end, (end-start)/n_frms).astype(int).tolist()
     elif sampling == "headtail":
-        indices_h = sorted(rnd.sample(range(vlen // 2), n_frms // 2))
-        indices_t = sorted(rnd.sample(range(vlen // 2, vlen), n_frms // 2))
+        indices_h = sorted(rnd.sample(range(dur*fps // 2), n_frms // 2))
+        indices_t = sorted(rnd.sample(range(dur*fps // 2, dur*fps), n_frms // 2))
         indices = indices_h + indices_t
     else:
         raise NotImplementedError
@@ -53,11 +54,10 @@ def load_video(video_path, start_time=0, duration=-1, n_frms=MAX_INT, height=-1,
     if not return_msg:
         return frms
 
-    fps = float(vr.get_avg_fps())
     sec = ", ".join([str(round(f / fps, 1)) for f in indices])
     # " " should be added in the start and end
     #msg = f"The video contains {len(indices)} frames sampled at {sec} seconds. "
-    msg = f"The video is {vlen/fps:.2f} seconds long containing {vlen} frames at {fps:.2f} and {len(indices)} frames are sampled. "
+    msg = f"The video is {dur:.2f} seconds long at {fps:.2f} FPS and {len(indices)} frames are sampled. "
     return frms, msg
 
 
