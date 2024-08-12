@@ -27,6 +27,13 @@ from embedding.video_llama.conversation.conversation_video import Chat, Conversa
 import decord
 decord.bridge.set_bridge('torch')
 
+# Imports for videollama2
+import sys
+sys.path.append('./')
+from embedding.videollama2.conversation import conv_templates
+from embedding.videollama2.constants import DEFAULT_MMODAL_TOKEN, MMODAL_TOKEN_INDEX
+from embedding.videollama2.mm_utils import get_model_name_from_path, tokenizer_MMODAL_token, process_video, process_image
+from embedding.videollama2.model.builder import load_pretrained_model
 
 
 instructions = [
@@ -121,19 +128,26 @@ def load_models():
     #tokenizer.padding_size = 'right'
 
     # Load video-llama model
-    video_llama = VL(**config['vl_branch'])
-    tokenizer = video_llama.model.llama_tokenizer
+    #video_llama = VL(**config['vl_branch'])
+    #tokenizer = video_llama.model.llama_tokenizer
     
+    # Load video-llama2 model
+    model_path = 'DAMO-NLP-SG/VideoLLaMA2-7B'
+    model_name = get_model_name_from_path(model_path)
+    tokenizer, video_llama2, processor, context_len = load_pretrained_model(model_path, None, model_name)
+    conv_mode = 'llama2'
+
     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True)
     
-    return video_llama, tokenizer, streamer
+    #print("Image aspect ratio: ", videollama2.config.image_aspect_ratio)
+    return video_llama2, tokenizer, processor, streamer
 
-video_llama, tokenizer, streamer = load_models()
-vis_processor_cfg = video_llama.cfg.datasets_cfg.webvid.vis_processor.train
-vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
+video_llama2, tokenizer, processor, streamer = load_models()
+#vis_processor_cfg = video_llama.cfg.datasets_cfg.webvid.vis_processor.train
+#vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
 print("-"*30)
 print("initializing model")
-chat = Chat(video_llama.model, vis_processor, device=device)
+#chat = Chat(video_llama.model, vis_processor, device=device)
 
 def chat_reset(chat_state, img_list):
     print("-"*30)
@@ -151,21 +165,54 @@ class VideoLLM(LLM):
             self, 
             video_path,
             text_input,
-            chat,
             start_time,
             duration,
+            model, # Add model argument for vllama2
+            #processor = None, # Add processor as argument for vllama2
             streamer = None,  # Add streamer as an argument
         ):
         
         
-        chat.upload_video_without_audio(video_path, start_time, duration)
-        chat.ask(text_input)#, chat_state)
+        #chat.upload_video_without_audio(video_path, start_time, duration)
+        #chat.ask(text_input)#, chat_state)
         #answer = chat.answer(chat_state, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.1, max_length=2000, keep_conv_hist=True, streamer=streamer)
-        answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.02, max_length=2000, keep_conv_hist=True, streamer=streamer)
+        #answer = chat.answer(max_new_tokens=150, num_beams=1, min_length=1, top_p=0.9, repetition_penalty=1.0, length_penalty=1, temperature=0.02, max_length=2000, keep_conv_hist=True, streamer=streamer)
 
-    def stream_res(self, video_path, text_input, chat, start_time, duration):
+        # Visual pre-process for vllama2
+        modal_list = ['video']
+        tensor = process_video(video_path, processor, model.config.image_aspect_ratio).to(dtype=torch.bfloat16, device='cpu', non_blocking=True)
+        default_mm_token = DEFAULT_MMODAL_TOKEN["VIDEO"]
+        modal_token_index = MMODAL_TOKEN_INDEX["VIDEO"]
+        tensor = [tensor]
+
+        # Text preprocess (tag process & generate prompt).
+        conv_mode = "llama2"
+        question = default_mm_token + "\n" + text_input
+        conv = conv_templates[conv_mode].copy()
+        conv.append_message(conv.roles[0], question)
+        conv.append_message(conv.roles[1], None)
+        prompt = conv.get_prompt()
+        input_ids = tokenizer_MMODAL_token(prompt, tokenizer, modal_token_index, return_tensors='pt').unsqueeze(0)
+
+        # Inference videollama2
+        with torch.inference_mode():
+            output_ids = model.generate(
+                input_ids,
+                images_or_videos=tensor,
+                modal_list=modal_list,
+                do_sample=True,
+                temperature=0.2,
+                max_new_tokens=1024,
+                use_cache=True,
+                streamer=streamer
+            )
+
+        outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
+        print(outputs[0])
+
+    def stream_res(self, video_path, text_input, start_time, duration, model):
         #thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, chat_state, img_list, streamer))  # Pass streamer to _call
-        thread = threading.Thread(target=self._call, args=(video_path, text_input, chat, start_time, duration, streamer))  # Pass streamer to _call
+        thread = threading.Thread(target=self._call, args=(video_path, text_input, start_time, duration, model, streamer))  # Pass streamer to _call
         thread.start()
         
         for text in streamer:
@@ -270,6 +317,7 @@ if 'qcnt' not in st.session_state.keys():
     st.session_state['qcnt'] = 0
 
 def handle_message():
+    global video_llama2
     print("-"*30)
     print("starting message handling")
     # Generate a new response if last message is not from assistant
@@ -301,7 +349,7 @@ def handle_message():
                 instruction = f"Instruction: {get_context(prompt)[0]}\nQuestion: {prompt}"
                 #instruction = f"Instruction: Describe the video content according to the user's question only if it includes the answer for the user's query. Otherwise, generate exactly:\'No related videos found in the database.\' and stop generating.\n User's question: {prompt}"
                 #for new_text in st.session_state.llm.stream_res(formatted_prompt):
-                for new_text in st.session_state.llm.stream_res(video_path, instruction, chat, playback_offset, config['clip_duration']):
+                for new_text in st.session_state.llm.stream_res(video_path, instruction, playback_offset, config['clip_duration'], video_llama2):
                     full_response += new_text
                     placeholder.markdown(full_response)
 
