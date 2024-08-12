@@ -4,7 +4,9 @@ videos: video_ingest/videos/
 generate_frames: True
 # How do you want to generate feature embeddings?
 embeddings:
-  type: 'video' # ['video', 'frame']
+  type: 'video' 
+  vclip_model_name: "openai/clip-vit-base-patch32"
+  vclip_num_frm: 64
   path: 'video_ingest/embeddings'
 # VL-branch config
 vl_branch:
@@ -23,7 +25,6 @@ vector_db:
   host: 0.0.0.0
   port: 55555 
 
-meanclip_cfg_path: embedding/meanclip_config/clip_meanAgg.json
 
 # LLM path
 model_path: meta-llama/Llama-2-7b-chat-hf

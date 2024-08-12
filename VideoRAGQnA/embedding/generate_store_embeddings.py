@@ -14,73 +14,18 @@ import json
 import os
 import argparse
 import torch
-from embedding.meanclip_modeling.model import MeanCLIP
-from embedding.meanclip_modeling.clip_model import CLIP
+from embedding.vclip.vclip import vCLIP
 from utils import config_reader as reader
 from embedding.extract_store_frames import process_all_videos
 from embedding.vector_stores import db
-from decord import VideoReader, cpu
-import numpy as np
-from PIL import Image
-from embedding.meanclip_datasets.preprocess import get_transforms
 
 
-def setup_meanclip_model(cfg, device):
+def setup_vclip_model(config, device="cpu"):
+    
+    model = vCLIP(config)
 
-    pretrained_state_dict = CLIP.get_config(pretrained_clip_name=cfg.clip_backbone)
-    state_dict = {}
-    epoch = 0
-    print("Loading CLIP pretrained weights ...")
-    for key, val in pretrained_state_dict.items():    
-        new_key = "clip." + key
-        if new_key not in state_dict:
-            state_dict[new_key] = val.clone()
+    return model
 
-    if cfg.sim_header != "meanP":
-        for key, val in pretrained_state_dict.items():
-            # initialize for the frame and type postion embedding
-            if key == "positional_embedding":
-                state_dict["frame_position_embeddings.weight"] = val.clone()
-
-            # using weight of first 4 layers for initialization
-            if key.find("transformer.resblocks") == 0:
-                num_layer = int(key.split(".")[2])
-
-                # initialize the 4-layer temporal transformer
-                if num_layer < 4:
-                    state_dict[key.replace("transformer.", "transformerClip.")] = val.clone()
-                    continue
-
-                if num_layer == 4: # for 1-layer transformer sim_header
-                    state_dict[key.replace(str(num_layer), "0")] = val.clone()
-
-    model = MeanCLIP(cfg, pretrained_state_dict)
-    missing_keys = []
-    unexpected_keys = []
-    error_msgs = []
-    # copy state_dict so _load_from_state_dict can modify it
-    metadata = getattr(state_dict, '_metadata', None)
-    state_dict = state_dict.copy()
-    if metadata is not None:
-        state_dict._metadata = metadata
-
-    def load(module, prefix=''):
-        local_metadata = {} if metadata is None else metadata.get(prefix[:-1], {})
-        module._load_from_state_dict(
-            state_dict, prefix, local_metadata, True, missing_keys, unexpected_keys, error_msgs)
-        for name, child in module._modules.items():
-            if child is not None:
-                load(child, prefix + name + '.')
-
-    load(model, prefix='')
-
-    if str(device) == "cpu":
-        model.float()
-
-    model.to(device)
-
-    print("Setup model done!")
-    return model, epoch
 
 def read_json(path):
     with open(path) as f:
@@ -154,10 +99,8 @@ def main():
     args = parser.parse_args()
     # Read configuration file
     config = reader.read_config(args.config_file)
-    # Read MeanCLIP
-    meanclip_cfg_json = json.load(open(config['meanclip_cfg_path'], 'r'))
-    meanclip_cfg = argparse.Namespace(**meanclip_cfg_json)
-
+    # Read vCLIP
+    meanclip_cfg = {"model_name": config['embeddings']['vclip_model_name'], "num_frm": config['embeddings']['vclip_num_frm']}
 
     print ('Config file data \n', yaml.dump(config, default_flow_style=False, sort_keys=False))
 
@@ -177,7 +120,7 @@ def main():
 
     if config['embeddings']['type'] == 'video':
         # init meanclip model
-        model, _ = setup_meanclip_model(meanclip_cfg, device="cpu")
+        model = setup_vclip_model(meanclip_cfg, device="cpu")
         vs = db.VideoVS(host, port, selected_db, model)
     else:
         print(f"ERROR: Selected embedding type in config.yaml {config['embeddings']['type']} is not in [\'video\', \'frame\']")

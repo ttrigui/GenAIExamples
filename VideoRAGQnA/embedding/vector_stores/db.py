@@ -16,21 +16,17 @@ from PIL import Image
 import torch
 import uuid
 import os
+import subprocess
 import time
 import torchvision.transforms as T
 toPIL = T.ToPILImage()
 
 # 'similarity', 'similarity_score_threshold' (needs threshold), 'mmr'
 
-class MeanCLIPEmbeddings(BaseModel, Embeddings):
+class vCLIPEmbeddings(BaseModel, Embeddings):
     """MeanCLIP Embeddings model."""
 
     model: Any
-    preprocess: Any
-    tokenizer: Any
-    # Select model: https://github.com/mlfoundations/open_clip
-    model_name: str = "ViT-H-14"
-    checkpoint: str = "laion2b_s32b_b79k"
 
     @root_validator(allow_reuse=True)
     def validate_environment(cls, values: Dict) -> Dict:
@@ -39,8 +35,6 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
             # Use the provided model if present
             if "model" not in values:
                 raise ValueError("Model must be provided during initialization.")
-            values["preprocess"] = get_transforms
-            values["tokenizer"] = SimpleTokenizer()
 
         except ImportError:
             raise ImportError(
@@ -50,35 +44,9 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         model_device = next(self.model.clip.parameters()).device
-        text_features = []
-        for text in texts:
-            # Tokenize the text
-            if isinstance(text, str):
-                text = [text]
+        text_features = self.model.get_text_embeddings(texts)
 
-            sot_token = self.tokenizer.encoder["<|startoftext|>"]
-            eot_token = self.tokenizer.encoder["<|endoftext|>"]
-            tokens = [[sot_token] + self.tokenizer.encode(text) + [eot_token] for text in texts]
-            tokenized_text = torch.zeros((len(tokens), 64), dtype=torch.int64)
-            for i in range(len(tokens)):
-                if len(tokens[i]) > 64:
-                    tokens[i] = tokens[i][:64-1] + tokens[i][-1:]
-                tokenized_text[i, :len(tokens[i])] = torch.tensor(tokens[i])
-            #print("text:", text[i])
-            #print("tokenized_text:", tokenized_text[i,:10])
-            text_embd, word_embd = self.model.get_text_output(tokenized_text.unsqueeze(0).to(model_device), return_hidden=False)
-
-            # Normalize the embeddings
-            #print(" --->>>> text_embd.shape:", text_embd.shape)
-            text_embd = rearrange(text_embd, "b n d -> (b n) d")
-            text_embd = text_embd / text_embd.norm(dim=-1, keepdim=True)
-
-            # Convert normalized tensor to list and add to the text_features list
-            embeddings_list = text_embd.squeeze(0).tolist()
-            #print("text embedding:", text_embd.flatten()[:10])
-            text_features.append(embeddings_list)
-
-        return text_features
+        return text_features.detach().numpy()
 
 
     def embed_query(self, text: str) -> List[float]:
@@ -93,24 +61,24 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
             # Encode the video to get the embeddings
             model_device = next(self.model.parameters()).device
             # Preprocess the video for the model
-            videos_tensor= self.load_video_for_meanclip(vid_path, num_frm=self.model.num_frm,
+            clip_images = self.load_video_for_vclip(vid_path, num_frm=self.model.num_frm,
                                                                               max_img_size=224,
                                                                               start_time=kwargs.get("start_time", None),
                                                                               clip_duration=kwargs.get("clip_duration", None)
                                                                               )
-            embeddings_tensor = self.model.get_video_embeddings(videos_tensor.unsqueeze(0).to(model_device))
+            embeddings_tensor = self.model.get_video_embeddings([clip_images])
 
             # Convert tensor to list and add to the video_features list
-            embeddings_list = embeddings_tensor.squeeze(0).tolist()
+            embeddings_list = embeddings_tensor.tolist()
 
             video_features.append(embeddings_list)
 
         return video_features
 
 
-    def load_video_for_meanclip(self, vis_path, num_frm=64, max_img_size=224, **kwargs):
+    def load_video_for_vclip(self, vid_path, num_frm=4, max_img_size=224, **kwargs):
         # Load video with VideoReader
-        vr = VideoReader(vis_path, ctx=cpu(0))
+        vr = VideoReader(vid_path, ctx=cpu(0))
         fps = vr.get_avg_fps()
         num_frames = len(vr)
         start_idx = int(fps*kwargs.get("start_time", [0])[0])
@@ -119,16 +87,13 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
         frame_idx = np.linspace(start_idx, end_idx, num=num_frm, endpoint=False, dtype=int) # Uniform sampling
         clip_images = []
 
-        # preprocess images
-        clip_preprocess = get_transforms("clip", max_img_size)
+        # read images
         temp_frms = vr.get_batch(frame_idx.astype(int).tolist())
         for idx in range(temp_frms.shape[0]):
             im = temp_frms[idx] # H W C
-            clip_images.append(clip_preprocess(toPIL(im.permute(2,0,1)))) # 3, 224, 224  as input to append
-        clip_images_tensor = torch.zeros((num_frm,) + clip_images[0].shape)
-        clip_images_tensor[:num_frm] = torch.stack(clip_images)
+            clip_images.append(toPIL(im.permute(2,0,1))) 
 
-        return clip_images_tensor
+        return clip_images
 
 
 class VideoVS:
@@ -139,7 +104,7 @@ class VideoVS:
         self.chosen_video_search_type = chosen_video_search_type
         self.constraints = None
         self.video_collection = 'video-test'
-        self.video_embedder = MeanCLIPEmbeddings(model=video_retriever_model)
+        self.video_embedder = vCLIPEmbeddings(model=video_retriever_model)
         self.chosen_video_search_type = chosen_video_search_type
 
         # initialize_db

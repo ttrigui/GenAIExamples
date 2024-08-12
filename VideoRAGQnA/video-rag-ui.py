@@ -20,7 +20,7 @@ import threading
 from utils import config_reader as reader
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
 from embedding.extract_vl_embedding import VLEmbeddingExtractor as VL
-from embedding.generate_store_embeddings import setup_meanclip_model 
+from embedding.generate_store_embeddings import setup_vclip_model 
 from embedding.video_llama.common.config import Config
 from embedding.video_llama.common.registry import registry
 from embedding.video_llama.conversation.conversation_video import Chat, Conversation, default_conversation,SeparatorStyle,conv_llava_llama_2
@@ -112,14 +112,6 @@ st.markdown(title_alignment, unsafe_allow_html=True)
 @st.cache_resource       
 def load_models():
     print("loading in model")
-    #print("HF Token: ", HUGGINGFACEHUB_API_TOKEN)
-    #model = AutoModelForCausalLM.from_pretrained(
-    #    model_path, torch_dtype=torch.float32, device_map=device, trust_remote_code=True, token=HUGGINGFACEHUB_API_TOKEN
-    #)
-
-    #tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, token=HUGGINGFACEHUB_API_TOKEN)
-    #tokenizer.padding_size = 'right'
-
     # Load video-llama model
     video_llama = VL(**config['vl_branch'])
     tokenizer = video_llama.model.llama_tokenizer
@@ -220,9 +212,8 @@ if 'vs' not in st.session_state.keys():
                 st.session_state['vs'] = db.VS(host, port, selected_db)
             elif config['embeddings']['type'] == "video":
                 import json
-                meanclip_cfg_json = json.load(open(config['meanclip_cfg_path'], 'r'))
-                meanclip_cfg = argparse.Namespace(**meanclip_cfg_json)
-                model, _ = setup_meanclip_model(meanclip_cfg, device="cpu")
+                meanclip_cfg = {"model_name": config['embeddings']['vclip_model_name'], "num_frm": config['embeddings']['vclip_num_frm']}
+                model = setup_vclip_model(meanclip_cfg, device="cpu")
                 st.session_state['vs'] = db.VideoVS(host, port, selected_db, model) 
 
         if st.session_state.vs.client == None:
