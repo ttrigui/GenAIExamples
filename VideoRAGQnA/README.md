@@ -55,9 +55,9 @@ pip install --pre --upgrade ipex-llm[all] --extra-index-url https://download.pyt
 pip install torchvision==0.16.0+cpu  torchaudio==2.1.0+cpu --index-url https://download.pytorch.org/whl/cpu
 ```
 
-Get access to gated meta-llama repo by requesting access here: https://huggingface.co/meta-llama/Llama-2-7b-chat-hf.
+- Get access to gated meta-llama repo by requesting access here: https://huggingface.co/meta-llama/Llama-2-7b-chat-hf.
 
-Create HF access token by following these instructions: https://huggingface.co/docs/hub/en/security-tokens#how-to-manage-user-access-tokens.
+- Create HF access token by following these instructions: https://huggingface.co/docs/hub/en/security-tokens#how-to-manage-user-access-tokens.
 
 Finally, export your HF access token so the model weights can be pulled successfully before being converted to int4:
 ```
