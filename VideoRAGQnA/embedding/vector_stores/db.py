@@ -9,8 +9,6 @@ from langchain_core.runnables import ConfigurableField
 from dateparser.search import search_dates
 import datetime
 from tzlocal import get_localzone
-from embedding.meanclip_modeling.simple_tokenizer import SimpleTokenizer
-from embedding.meanclip_datasets.preprocess import get_transforms
 from einops import rearrange
 from PIL import Image
 import torch
@@ -89,6 +87,7 @@ class vCLIPEmbeddings(BaseModel, Embeddings):
 
         # read images
         temp_frms = vr.get_batch(frame_idx.astype(int).tolist())
+        print(type(temp_frms), temp_frms.shape)
         for idx in range(temp_frms.shape[0]):
             im = temp_frms[idx] # H W C
             clip_images.append(toPIL(im.permute(2,0,1))) 
@@ -171,12 +170,15 @@ class VideoVS:
                     self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images, "filter":self.constraints})
 
         else:
+            print("\n\t--> dates_found:", dates_found, "\n")
             self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
     
     def MultiModalRetrieval(self, query: str, top_k: Optional[int] = 3):
         self.update_db(query, top_k)
         #video_results = self.video_retriever.invoke(query)
         video_results = self.video_db.similarity_search_with_score(query=query, k=top_k, filter=self.constraints)
+        # revert constraints back to empty dict to release time-based condition for the next retrieval
+        self.constraints = {}
         #for r, score in video_results:
         #    print("videos:", r.metadata['video_path'], '\t', r.metadata['date'], '\t', r.metadata['time'], r.metadata['timestamp'], f"score: {score}", r, '\n')
 
