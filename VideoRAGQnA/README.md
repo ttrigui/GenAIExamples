@@ -1,7 +1,7 @@
 # Video RAG
 
 ## Introduction
-Video RAG is a framework that retrieves video based on provided user prompt. It uses only the video embeddings to perform vector similarity search in Intel's VDMS vector database and performs all operations on Intel Xeon CPU. The pipeline supports long form videos and time-based search. The provided solution also supports feature to retrieve more similar videos without prompting it. (see the example video below)
+Video RAG is a framework that retrieves video based on provided user prompt. It uses only the video embeddings to perform vector similarity search in Intel's VDMS vector database and performs all operations on Intel Client CPU. The pipeline supports long form videos and time-based search. The provided solution also supports feature to retrieve more similar videos without prompting it. (see the example video below)
 
 ![Example Video](docs/visual-rag-demo.gif)
 
@@ -55,8 +55,9 @@ pip install --pre --upgrade ipex-llm[all] --extra-index-url https://download.pyt
 pip install torchvision==0.16.0+cpu  torchaudio==2.1.0+cpu --index-url https://download.pytorch.org/whl/cpu
 ```
 
-Get access to gated meta-llama repo by requesting access here: https://huggingface.co/meta-llama/Llama-2-7b-chat-hf
-Create HF access token by following these instructions: https://huggingface.co/docs/hub/en/security-tokens#how-to-manage-user-access-tokens
+Get access to gated meta-llama repo by requesting access here: https://huggingface.co/meta-llama/Llama-2-7b-chat-hf.
+
+Create HF access token by following these instructions: https://huggingface.co/docs/hub/en/security-tokens#how-to-manage-user-access-tokens.
 
 Finally, export your HF access token so the model weights can be pulled successfully before being converted to int4:
 ```
