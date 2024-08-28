@@ -48,6 +48,18 @@ git clone https://github.com/langchain-ai/langchain
 pip install -e langchain/libs/community
 ```
 
+Install Intel's torch dependencies
+
+``` 
+pip install --pre --upgrade ipex-llm[all] --extra-index-url https://download.pytorch.org/whl/cpu
+pip install torchvision==0.16.0+cpu  torchaudio==2.1.0+cpu --index-url https://download.pytorch.org/whl/cpu
+```
+
+Quantize and save Llama weights using Intel's Extension for PyTorch LLM
+```
+python int4_llama.py
+```
+
 Run start.sh script for fresh start. This will download model weights if not exist and restart VDMS container if it's left open. 
 ```bash
 bash start.sh

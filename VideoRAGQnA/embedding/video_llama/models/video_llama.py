@@ -1,13 +1,19 @@
 import logging
 import random
+import pdb
 
 import torch
 from torch.cuda.amp import autocast as autocast
 import torch.nn as nn
 
+# Add ipex dependency
+from ipex_llm import optimize_model
+from ipex_llm.optimize import low_memory_init, load_low_bit
+
 from embedding.video_llama.common.registry import registry
 from embedding.video_llama.models.blip2 import Blip2Base, disabled_train
 from embedding.video_llama.models.modeling_llama import LlamaForCausalLM
+#from transformers import LlamaForCausalLM
 # from video_llama.models.Qformer import BertEncoder
 from transformers import LlamaTokenizer,BertConfig
 # from transformers.models.bert.modeling_bert import BertEncoder
@@ -119,6 +125,7 @@ class VideoLLAMA(Blip2Base):
         print('Loading Q-Former Done')
         
         print('Loading LLAMA Tokenizer')
+        #saved_dir = '/home/intel-admin/plischwe/GenAIExamples/VideoRAGQnA/llama-2-ipex-llm-4-bit'
         self.llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model, use_fast=False)
         if self.llama_tokenizer.pad_token is None:
             self.llama_tokenizer.pad_token = self.llama_tokenizer.unk_token 
@@ -132,23 +139,26 @@ class VideoLLAMA(Blip2Base):
 
         print('Loading LLAMA Model')
         if self.low_resource:
-            self.llama_model = LlamaForCausalLM.from_pretrained(
-                llama_model,
-                torch_dtype=torch.bfloat16,
-                load_in_8bit=True,
-                device_map={'': device_8bit}
-            )
+            saved_dir='./llama-2-ipex-llm-4-bit'
+            with low_memory_init(): # Fast and low cost by loading model on meta device
+                model = LlamaForCausalLM.from_pretrained(saved_dir,
+                                            torch_dtype="auto",
+                                            trust_remote_code=True)
+            self.llama_model = load_low_bit(model, saved_dir) # Load the optimized model
+            print("Loaded int4 optimized llama")
+
         else:
-            self.llama_model = LlamaForCausalLM.from_pretrained(
-                llama_model,
-                torch_dtype=torch.bfloat16,
-            )
+            saved_dir = './llama-2-ipex-llm-4-bit'
+            with low_memory_init(): # Fast and low cost by loading model on meta device
+                model = LlamaForCausalLM.from_pretrained(saved_dir,
+                                            torch_dtype="auto",
+                                            trust_remote_code=True)
+            self.llama_model = load_low_bit(model, saved_dir) # Load the optimized model
+            print("Loaded int4 optimized llama")
 
         for name, param in self.llama_model.named_parameters():
             param.requires_grad = False
         print('Loading LLAMA Done')
-        
-
 
         print('Loading LLAMA proj')
         self.llama_proj = nn.Linear(
@@ -617,9 +627,12 @@ class VideoLLAMA(Blip2Base):
 
         ckpt_path = cfg.get("ckpt", "")  # load weights of MiniGPT-4
         if ckpt_path:
+            #pdb.set_trace()
             print("Load first Checkpoint: {}".format(ckpt_path))
             ckpt = torch.load(ckpt_path, map_location="cpu")
+            #print("Checkpoint: ", ckpt)
             msg = model.load_state_dict(ckpt['model'], strict=False)
+            #print("Message: ", msg)
         ckpt_path_2 = cfg.get("ckpt_2", "")  
         if ckpt_path_2:
             print("Load second Checkpoint: {}".format(ckpt_path_2))
