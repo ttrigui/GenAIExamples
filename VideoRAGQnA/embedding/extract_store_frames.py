@@ -31,7 +31,19 @@ def calculate_intervals(video_path, chunk_duration, clip_duration):
 
     cap.release()
     return intervals
-
+    
+def random_date_in_past_6_months():
+    # Get the current date and time
+    now = datetime.datetime.now()
+    
+    # Calculate the date 6 months ago from now
+    six_months_ago = now - datetime.timedelta(days=6*30)
+    
+    # Generate a random date between six_months_ago and now
+    random_date = six_months_ago + (now - six_months_ago) * random.random()
+    
+    return random_date
+    
 def process_all_videos(config):
     path = config['videos']
     meta_output_dir = config['meta_output_dir']
@@ -40,75 +52,6 @@ def process_all_videos(config):
     emb_type = config['embeddings']['type']
     chunk_duration = config['chunk_duration']
     clip_duration = config['clip_duration']
-
-    def extract_frames(video_path, meta_output_dir, date_time, local_timezone):
-        video = os.path.splitext(os.path.basename(video_path))[0]
-        # Create a directory to store frames and metadata
-        os.makedirs(meta_output_dir, exist_ok=True)
-        
-        # Open the video file
-        cap = cv2.VideoCapture(video_path)
-
-        if int(cv2.__version__.split('.')[0]) < 3:
-            fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
-        else:
-            fps = cap.get(cv2.CAP_PROP_FPS)
-    
-        total_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-        
-        #print (f'fps {fps}')
-        #print (f'total frames {total_frames}')
-        
-        mod = int(fps // N)
-        if mod == 0: mod = 1
-        
-        print (f'total frames {total_frames}, N {N}, mod {mod}')
-        
-        # Variables to track frame count and desired frames
-        frame_count = 0
-        
-        # Metadata dictionary to store timestamp and image paths
-        metadata = {}
-        
-        while cap.isOpened():
-            ret, frame = cap.read()
-            
-            if not ret:
-                break
-            
-            frame_count += 1
-            
-            if frame_count % mod == 0:
-                timestamp = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000  # Convert milliseconds to seconds
-                frame_path = os.path.join(image_output_dir, f"{video}_{frame_count}.jpg")
-                time = date_time.strftime("%H:%M:%S")
-                date = date_time.strftime("%Y-%m-%d")
-                hours, minutes, seconds = map(float, time.split(":"))
-                year, month, day = map(int, date.split("-"))
-                
-                cv2.imwrite(frame_path, frame)  # Save the frame as an image
-
-
-                metadata[frame_count] = {"timestamp": timestamp, "frame_path": frame_path,"date": date, "year": year, "month": month, "day": day, 
-                    "time": time, "hours": hours, "minutes": minutes, "seconds": seconds}
-                if selected_db == 'vdms':
-                    # Localize the current time to the local timezone of the machine
-                    #Tahani might not need this
-                    current_time_local = date_time.replace(tzinfo=datetime.timezone.utc).astimezone(local_timezone)
-
-                    # Convert the localized time to ISO 8601 format with timezone offset
-                    iso_date_time = current_time_local.isoformat()
-                    metadata[frame_count]['date_time'] = {"_date": str(iso_date_time)}
-
-        # Save metadata to a JSON file
-        metadata_file = os.path.join(meta_output_dir, f"{video}_metadata.json")
-        with open(metadata_file, "w") as f:
-            json.dump(metadata, f, indent=4)
-        
-        # Release the video capture and close all windows
-        cap.release()
-        print(f"{frame_count/mod} Frames extracted and metadata saved successfully.") 
-        return fps, total_frames, metadata_file
 
     videos = [file for file in os.listdir(path) if file.endswith('.mp4')] # TODO: increase supported video formats
 
@@ -119,8 +62,8 @@ def process_all_videos(config):
         metadata[each_video] = {}
         keyname = each_video
         video_path = os.path.join(path, each_video)
-        date_time = datetime.datetime.now()  # FIXME CHECK: is this correct? 
-        #date_time = t.ctime(os.stat(video_path).st_ctime)
+        # for current datetime use datetime.datetime.now() 
+        date_time = random_date_in_past_6_months()
         # Get the local timezone of the machine
         local_timezone = get_localzone()
         if emb_type == 'video':
