@@ -326,7 +326,7 @@ with col1:
             'Was there any person wearing a blue shirt seen in the last 6 hours?',
             'Was there any person wearing a blue shirt seen last Sunday?',
             'Was a person wearing glasses seen in the last 30 minutes?',
-            'Was a person wearing glasses seen in the last 72 hours?',
+            'Was a person wearing glasses seen in the last 6 months?',
         ),
         key='example_video'
     )
