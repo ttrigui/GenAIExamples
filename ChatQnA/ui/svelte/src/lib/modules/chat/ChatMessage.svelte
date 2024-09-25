@@ -24,13 +24,15 @@
 
 	export let msg: Message;
 	export let time: string = "";
-	console.log("msg", msg);
 </script>
 
 <div
 	class={msg.role === 0
 		? "flex w-full gap-3"
 		: "flex w-full items-center gap-3"}
+	data-testid={msg.role === 0
+		? "display-answer"
+		: "display-question"}
 >
 	<div
 		class={msg.role === 0
@@ -42,7 +44,7 @@
 	<div class="group relative items-center">
 		<div>
 			<p
-				class=" max-w-[60vw] items-center whitespace-pre-line break-keep text-[0.8rem] leading-5 sm:max-w-[50rem]"
+				class=" max-w-[60vw] items-center whitespace-pre-line break-keep text-[0.8rem] leading-5 sm:max-w-[60rem]"
 			>
 				{@html msg.content}
 			</p>

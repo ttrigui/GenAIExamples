@@ -1,16 +1,6 @@
-# Copyright (c) 2024 Intel Corporation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
 opea_micro_services:
   redis-vector-db:
@@ -29,7 +19,7 @@ opea_micro_services:
   tei-embedding-service:
     host: ${TEI_EMBEDDING_SERVICE_IP}
     ports: ${TEI_EMBEDDING_SERVICE_PORT}
-    image: opea/tei-gaudi:latest
+    image: ghcr.io/huggingface/tei-gaudi:latest
     volumes:
       - "./data:/data"
     runtime: habana
@@ -55,10 +45,10 @@ opea_micro_services:
     ports: ${RERANK_SERVICE_PORT}
     image: opea/reranking-tei:latest
     endpoint: /v1/reranking
-  tgi_service:
+  tgi-service:
     host: ${TGI_SERVICE_IP}
     ports: ${TGI_SERVICE_PORT}
-    image: ghcr.io/huggingface/tgi-gaudi:1.2.1
+    image: ghcr.io/huggingface/tgi-gaudi:2.0.5
     volumes:
       - "./data:/data"
     runtime: habana
@@ -66,9 +56,13 @@ opea_micro_services:
       - SYS_NICE
     ipc: host
     environment:
-      HUGGINGFACEHUB_API_TOKEN: ${HUGGINGFACEHUB_API_TOKEN}
+      HUGGING_FACE_HUB_TOKEN: ${HUGGINGFACEHUB_API_TOKEN}
       HABANA_VISIBLE_DEVICES: all
       OMPI_MCA_btl_vader_single_copy_mechanism: none
+      ENABLE_HPU_GRAPH: true
+      LIMIT_HPU_GRAPH: true
+      USE_FLASH_ATTENTION: true
+      FLASH_ATTENTION_RECOMPUTE: true
     model-id: ${LLM_MODEL_ID}
   llm:
     host: ${LLM_SERVICE_HOST_IP}
@@ -82,6 +76,7 @@ opea_micro_services:
     image: opea/chatqna-ui:latest
     environment:
       - CHAT_BASE_URL=${BACKEND_SERVICE_ENDPOINT}
+      - UPLOAD_FILE_BASE_URL=${DATAPREP_SERVICE_ENDPOINT}
 
 opea_mega_service:
   host: ${MEGA_SERVICE_HOST_IP}

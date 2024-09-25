@@ -1,18 +1,18 @@
-<h1 align="center" id="title">Code Translation</h1>
+# Code Translation
 
-### 📸 Project Screenshots
+## 📸 Project Screenshots
 
-![project-screenshot](https://imgur.com/1M4xjok.png)
-![project-screenshot](https://imgur.com/IIbG4HN.png)
-![project-screenshot](https://imgur.com/FbThcUY.png)
+![project-screenshot](../../assets/img/codeTrans_ui_init.png)
+![project-screenshot](../../assets/img/codeTrans_ui_select.png)
+![project-screenshot](../../assets/img/codeTrans_ui_response.png)
 
-<h2>🧐 Features</h2>
+## 🧐 Features
 
 Here're some of the project's features:
 
-- Code Translation: The system is capable of recognizing multiple languages and converting the current code content into the desired language's code format, enabling a set of code to be reused in multiple places, thus alleviating developers' development pressure.
+- Code Translation: The system is capable of recognizing multiple languages and converting the current code content into the desired language's code format, enabling a set of codes to be reused in multiple places, thus alleviating developers' development pressure.
 
-<h2>🛠️ Get it Running:</h2>
+## 🛠️ Get it Running
 
 1. Clone the repo.
 
@@ -20,7 +20,7 @@ Here're some of the project's features:
 
 3. Modify the required .env variables.
    ```
-   BASIC_URL = ''
+   BASE_URL = ''
    ```
 4. Execute `npm install` to install the corresponding dependencies.
 

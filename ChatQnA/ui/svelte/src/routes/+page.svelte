@@ -16,7 +16,7 @@
 
 <script lang="ts">
 	export let data;
-	import { ifStoreMsg, knowledge1 } from "$lib/shared/stores/common/Store";
+	import { knowledge1, storageFiles } from "$lib/shared/stores/common/Store";
 	import { onMount } from "svelte";
 	import {
 		LOCAL_STORAGE_KEY,
@@ -25,28 +25,27 @@
 		type Message,
 	} from "$lib/shared/constant/Interface";
 	import {
-		fromTimeStampToTime,
 		getCurrentTimeStamp,
 		scrollToBottom,
 		scrollToTop,
 	} from "$lib/shared/Utils";
 	import { fetchTextStream } from "$lib/network/chat/Network";
 	import LoadingAnimation from "$lib/shared/components/loading/Loading.svelte";
-	import { browser } from "$app/environment";
 	import "driver.js/dist/driver.css";
 	import "$lib/assets/layout/css/driver.css";
 	import UploadFile from "$lib/shared/components/upload/uploadFile.svelte";
 	import PaperAirplane from "$lib/assets/chat/svelte/PaperAirplane.svelte";
-	import Gallery from "$lib/shared/components/chat/gallery.svelte";
 	import Scrollbar from "$lib/shared/components/scrollbar/Scrollbar.svelte";
 	import ChatMessage from "$lib/modules/chat/ChatMessage.svelte";
+	import { fetchAllFile } from "$lib/network/upload/Network.js";
+	import { getNotificationsContext } from "svelte-notifications";
 
 	let query: string = "";
 	let loading: boolean = false;
 	let scrollToDiv: HTMLDivElement;
 	// ·········
 	let chatMessages: Message[] = data.chatMsg ? data.chatMsg : [];
-	console.log("chatMessages", chatMessages);
+	const { addNotification } = getNotificationsContext();
 
 	// ··············
 
@@ -56,75 +55,129 @@
 		scrollToDiv = document
 			.querySelector(".chat-scrollbar")
 			?.querySelector(".svlr-viewport")!;
+
+		const res = await fetchAllFile();
+		if (res) {
+			storageFiles.set(res);
+		}
 	});
 
-	function handleTop() {
-		console.log("top");
+	function showNotification(text: string, type: string) {
+		addNotification({
+			text: text,
+			position: "top-left",
+			type: type,
+			removeAfter: 3000,
+		});
+	}
 
+	function handleTop() {
 		scrollToTop(scrollToDiv);
 	}
 
 	function storeMessages() {
-		console.log('localStorage', chatMessages);
-
 		localStorage.setItem(
 			LOCAL_STORAGE_KEY.STORAGE_CHAT_KEY,
 			JSON.stringify(chatMessages)
 		);
 	}
 
+	function decodeEscapedBytes(str: string): string {
+		const byteArray = str
+			.split("\\x")
+			.slice(1)
+			.map((byte) => parseInt(byte, 16));
+		const decoded = new TextDecoder("utf-8").decode(new Uint8Array(byteArray));
+
+		return decoded;
+	}
+
+	function decodeUnicode(str: string): string {
+		const decoded = str.replace(/\\u[\dA-Fa-f]{4}/g, (match) => {
+			return String.fromCharCode(parseInt(match.replace(/\\u/g, ""), 16));
+		});
+
+		return decoded;
+	}
+
 	const callTextStream = async (query: string, startSendTime: number) => {
-		const eventSource = await fetchTextStream(query, knowledge_1);
-
-		eventSource.addEventListener("message", (e: any) => {
-			let currentMsg = e.data;
-            currentMsg = currentMsg.replace("@#$", " ")
-			console.log("currentMsg", currentMsg);
-			if (currentMsg == "[DONE]") {
-				console.log("done getCurrentTimeStamp", getCurrentTimeStamp);
-				let startTime = chatMessages[chatMessages.length - 1].time;
-
-				loading = false;
-				let totalTime = parseFloat(((getCurrentTimeStamp() - startTime) / 1000).toFixed(2));
-				console.log("done totalTime", totalTime);
-				console.log(
-					"chatMessages[chatMessages.length - 1]",
-					chatMessages[chatMessages.length - 1]
-				);
-
-				if (chatMessages.length - 1 !== -1) {
-					chatMessages[chatMessages.length - 1].time = totalTime;
+		try {
+			const eventSource = await fetchTextStream(query);
+			eventSource.addEventListener("error", (e: any) => {
+				if (e.type === "error") {
+					showNotification("Failed to load chat content.", "error");
+					loading = false;
 				}
-				console.log("done chatMessages", chatMessages);
+			});
 
-				storeMessages();
-			} else {
-				if (chatMessages[chatMessages.length - 1].role == MessageRole.User) {
+			eventSource.addEventListener("message", (e: any) => {
+				let msg = e.data;
+				console.log("msg", msg);
 
-					chatMessages = [
-						...chatMessages,
-						{
+				const handleDecodedMessage = (decodedMsg: string) => {
+					if (decodedMsg !== "</s>") {
+						decodedMsg = decodedMsg.replace(/\\n/g, "\n");
+					}
+
+					if (chatMessages[chatMessages.length - 1].role === MessageRole.User) {
+						chatMessages.push({
 							role: MessageRole.Assistant,
 							type: MessageType.Text,
-							content: currentMsg,
+							content: decodedMsg,
 							time: startSendTime,
-						},
-					];
-					console.log("? chatMessages", chatMessages);
+						});
+					} else {
+						chatMessages[chatMessages.length - 1].content += decodedMsg;
+					}
+
+					scrollToBottom(scrollToDiv);
+				};
+
+				if (msg.startsWith("b")) {
+					let currentMsg = msg.slice(2, -1);
+
+					if (/\\x[\dA-Fa-f]{2}/.test(currentMsg)) {
+						currentMsg = decodeEscapedBytes(currentMsg);
+					} else if (/\\u[\dA-Fa-f]{4}/.test(currentMsg)) {
+						currentMsg = decodeUnicode(currentMsg);
+					}
+
+					handleDecodedMessage(currentMsg);
+				} else if (msg === "[DONE]") {
+					console.log("Done");
+
+					let startTime = chatMessages[chatMessages.length - 1].time;
+					loading = false;
+					let totalTime = parseFloat(
+						((getCurrentTimeStamp() - startTime) / 1000).toFixed(2)
+					);
+
+					if (chatMessages.length - 1 !== -1) {
+						chatMessages[chatMessages.length - 1].time = totalTime;
+					}
+
+					storeMessages();
 				} else {
-					let content = chatMessages[chatMessages.length - 1].content as string;
-					chatMessages[chatMessages.length - 1].content =
-						content + currentMsg;
+					if (/\\x[\dA-Fa-f]{2}/.test(msg)) {
+						msg = decodeEscapedBytes(msg);
+					} else if (/\\u[\dA-Fa-f]{4}/.test(msg)) {
+						msg = decodeUnicode(msg);
+					}
+
+					let currentMsg = msg.replace(/"/g, "").replace(/\\n/g, "\n");
+
+					handleDecodedMessage(currentMsg);
 				}
-				scrollToBottom(scrollToDiv);
-			}
-		});
-		eventSource.stream();
+			});
+
+			eventSource.stream();
+		} catch (error: any) {
+			showNotification("Failed to load chat content.", "error");
+			loading = false;
+		}
 	};
 
 	const handleTextSubmit = async () => {
-		console.log("handleTextSubmit");
-
 		loading = true;
 		const newMessage = {
 			role: MessageRole.User,
@@ -147,15 +200,6 @@
 		localStorage.removeItem(LOCAL_STORAGE_KEY.STORAGE_CHAT_KEY);
 		chatMessages = [];
 	}
-
-	function isEmptyObject(obj: any): boolean {
-		for (let key in obj) {
-			if (obj.hasOwnProperty(key)) {
-				return false;
-			}
-		}
-		return true;
-	}
 </script>
 
 <!-- <DropZone on:drop={handleImageSubmit}> -->
@@ -171,7 +215,7 @@
 			class="fixed relative flex w-full flex-col items-center justify-between bg-white p-2 pb-0"
 		>
 			<div class="relative my-4 flex w-full flex-row justify-center">
-				<div class="focus:border-none relative w-full">
+				<div class="relative w-full focus:border-none">
 					<input
 						class="text-md block w-full border-0 border-b-2 border-gray-300 px-1 py-4
 						text-gray-900 focus:border-gray-300 focus:ring-0 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
@@ -210,7 +254,7 @@
 					<button
 						class="bg-primary text-primary-foreground hover:bg-primary/90 group flex items-center justify-center space-x-2 p-2"
 						type="button"
-						data-testid='clear-chat'
+						data-testid="clear-chat"
 						on:click={() => handelClearHistory()}
 						><svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -228,8 +272,7 @@
 		{/if}
 		<!-- clear -->
 
-		<div class="mx-auto flex h-full w-full flex-col" data-testid='chat-message'
-		>
+		<div class="mx-auto flex h-full w-full flex-col" data-testid="chat-message">
 			<Scrollbar
 				classLayout="flex flex-col gap-1 mr-4"
 				className="chat-scrollbar h-0 w-full grow px-2 pt-2 mt-3 mr-5"

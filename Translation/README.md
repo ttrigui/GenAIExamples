@@ -1,51 +1,21 @@
-# Language Translation
+# Translation Application
 
 Language Translation is the communication of the meaning of a source-language text by means of an equivalent target-language text.
 
-The workflow falls into the following architecture:
+Translation architecture shows below:
 
-![architecture](https://i.imgur.com/5f9hoAW.png)
+![architecture](./assets/img/translation_architecture.png)
 
-# Start Backend Service
+This Translation use case performs Language Translation Inference across multiple platforms. Currently, we provide the example for [Intel Gaudi2](https://www.intel.com/content/www/us/en/products/details/processors/ai-accelerators/gaudi-overview.html) and [Intel Xeon Scalable Processors](https://www.intel.com/content/www/us/en/products/details/processors/xeon.html), and we invite contributions from other hardware vendors to expand OPEA ecosystem.
 
-1. Start the TGI service to deploy your LLM
+## Deploy Translation Service
 
-```sh
-cd serving/tgi_gaudi
-bash build_docker.sh
-bash launch_tgi_service.sh
-```
+The Translation service can be effortlessly deployed on either Intel Gaudi2 or Intel Xeon Scalable Processors.
 
-`launch_tgi_service.sh` by default uses `8080` as the TGI service's port. Please replace it if there are any port conflicts.
+### Deploy Translation on Gaudi
 
-2. Start the Language Translation service
+Refer to the [Gaudi Guide](./docker_compose/intel/hpu/gaudi/README.md) for instructions on deploying Translation on Gaudi.
 
-```sh
-cd langchain/docker
-bash build_docker.sh
-docker run -it --name translation_server --net=host --ipc=host -e TGI_ENDPOINT=${TGI_ENDPOINT} -e HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN} -e SERVER_PORT=8000 -e http_proxy=${http_proxy} -e https_proxy=${https_proxy} translation:latest bash
-```
+### Deploy Translation on Xeon
 
-Here is the explanation of some of the above parameters:
-
-- `TGI_ENDPOINT`: The endpoint of your TGI service, usually equal to `<ip of your machine>:<port of your TGI service>`.
-- `HUGGINGFACEHUB_API_TOKEN`: Your HuggingFace hub API token, usually generated [here](https://huggingface.co/settings/tokens).
-- `SERVER_PORT`: The port of the Translation service on the host.
-
-3. Quick test
-
-```sh
-curl http://localhost:8000/v1/translation \
-    -X POST \
-    -d '{"language_from": "Chinese","language_to": "English","source_language": "我爱机器翻译。"}' \
-    -H 'Content-Type: application/json'
-```
-
-The shortcodes of languages are also supported:
-
-```sh
-curl http://localhost:8000/v1/translation \
-    -X POST \
-    -d '{"language_from": "de","language_to": "en","source_language": "Maschinelles Lernen"}' \
-    -H 'Content-Type: application/json'
-```
+Refer to the [Xeon Guide](./docker_compose/intel/cpu/xeon/README.md) for instructions on deploying Translation on Xeon.

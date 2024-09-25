@@ -1,237 +1,71 @@
-<div align="center">
-
 # Generative AI Examples
 
-This project provides a collective list of Generative AI (GenAI) and Retrieval-Augmented Generation (RAG) examples such as chatbot with question and answering (ChatQnA), code generation (CodeGen), document summary (DocSum), etc.
-
-[![version](https://img.shields.io/badge/release-0.1-green)](https://github.com/opea-project/GenAIExamples/releases)
+[![version](https://img.shields.io/badge/release-0.9-green)](https://github.com/opea-project/GenAIExamples/releases)
 [![license](https://img.shields.io/badge/license-Apache%202-blue)](https://github.com/intel/neural-compressor/blob/master/LICENSE)
 
 ---
 
-<div align="left">
+## Introduction
 
-## GenAI Examples
+GenAIExamples are designed to give developers an easy entry into generative AI, featuring microservice-based samples that simplify the processes of deploying, testing, and scaling GenAI applications. All examples are fully compatible with Docker and Kubernetes, supporting a wide range of hardware platforms such as Gaudi, Xeon, and NVIDIA GPU, and other hardwares, ensuring flexibility and efficiency for your GenAI adoption.
 
-All the examples are well-validated on Intel platforms. In addition, these examples are:
+## Architecture
 
-- <b>Easy to use</b>. Use ecosystem-compliant APIs to build the end-to-end GenAI examples
+[GenAIComps](https://github.com/opea-project/GenAIComps) is a service-based tool that includes microservice components such as llm, embedding, reranking, and so on. Using these components, various examples in GenAIExample can be constructed, including ChatQnA, DocSum, etc.
 
-- <b>Easy to customize</b>. Customize the example using different framework, LLM, embedding, serving etc.
+[GenAIInfra](https://github.com/opea-project/GenAIInfra), part of the OPEA containerization and cloud-native suite, enables quick and efficient deployment of GenAIExamples in the cloud.
 
-- <b>Easy to deploy</b>. Deploy the GenAI examples with performance on Intel platforms
+[GenAIEval](https://github.com/opea-project/GenAIEval) measures service performance metrics such as throughput, latency, and accuracy for GenAIExamples. This feature helps users compare performance across various hardware configurations easily.
 
-> **Note**:
-> The below support matrix gives the validated configurations. Feel free to customize per your needs.
+## Getting Started
 
-### ChatQnA
+GenAIExamples offers flexible deployment options that cater to different user needs, enabling efficient use and deployment in various environments. Here’s a brief overview of the three primary methods: Python startup, Docker Compose, and Kubernetes.
 
-[ChatQnA](./ChatQnA/README.md) is an example of chatbot for question and answering through retrieval argumented generation (RAG).
+Users can choose the most suitable approach based on ease of setup, scalability needs, and the environment in which they are operating.
 
-<table>
-	<tbody>
-		<tr>
-			<td>Framework</td>
-			<td>LLM</td>
-			<td>Embedding</td>
-			<td>Vector Database</td>
-			<td>Serving</td>
-			<td>HW</td>
-			<td>Description</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/Intel/neural-chat-7b-v3-3">NeuralChat-7B</a></td>
-			<td><a href="https://huggingface.co/BAAI/bge-base-en">BGE-Base</a></td>
-			<td><a href="https://redis.io/">Redis</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a> <a href="https://github.com/huggingface/text-embeddings-inference">TEI</a></td>
-			<td>Xeon/Gaudi2</td>
-			<td>Chatbot</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/Intel/neural-chat-7b-v3-3">NeuralChat-7B</a></td>
-			<td><a href="https://huggingface.co/BAAI/bge-base-en">BGE-Base</a></td>
-			<td><a href="https://www.trychroma.com/">Chroma</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a> <a href="https://github.com/huggingface/text-embeddings-inference">TEI</td>
-			<td>Xeon/Gaudi2</td>
-			<td>Chatbot</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/mistralai/Mistral-7B-v0.1">Mistral-7B</a></td>
-			<td><a href="https://huggingface.co/BAAI/bge-base-en">BGE-Base</a></td>
-			<td><a href="https://redis.io/">Redis</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a> <a href="https://github.com/huggingface/text-embeddings-inference">TEI</td>
-			<td>Xeon/Gaudi2</td>
-			<td>Chatbot</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/mistralai/Mistral-7B-v0.1">Mistral-7B</a></td>
-			<td><a href="https://huggingface.co/BAAI/bge-base-en">BGE-Base</a></td>
-			<td><a href="https://qdrant.tech/">Qdrant</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a> <a href="https://github.com/huggingface/text-embeddings-inference">TEI</td>
-			<td>Xeon/Gaudi2</td>
-			<td>Chatbot</td>
-		</tr>
-	</tbody>
-</table>
+### Deployment Guide
 
-### CodeGen
+Deployment are based on released docker images by default, check [docker image list](./docker_images_list.md) for detailed information. You can also build your own images following instructions.
 
-[CodeGen](./CodeGen/README.md) is an example of copilot designed for code generation in Visual Studio Code.
+#### Prerequisite
 
-<table>
-	<tbody>
-		<tr>
-			<td>Framework</td>
-			<td>LLM</td>
-			<td>Serving</td>
-			<td>HW</td>
-			<td>Description</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/deepseek-ai/deepseek-coder-33b-instruct">Deepseek-Coder-33B</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a></td>
-			<td>Xeon/Gaudi2</td>
-			<td>Copilot</td>
-		</tr>
-	</tbody>
-</table>
+- For Docker Compose based deployment, you should have docker compose installed. Refer to [docker compose install](https://docs.docker.com/compose/install/).
+- For Kubernetes based deployment, we provide 3 ways from the easiest manifests to powerful [GMC](https://github.com/opea-project/GenAIInfra/tree/main/microservices-connector/README.md) based deployment.
+  - You should have a kubernetes cluster ready for use. If not, you can refer to [k8s install](https://github.com/opea-project/docs/tree/main/guide/installation/k8s_install/README.md) to deploy one.
+  - (Optional) You should have GMC installed to your kubernetes cluster if you want to try with GMC. Refer to [GMC install](https://github.com/opea-project/docs/blob/main/guide/installation/gmc_install/gmc_install.md) for more information.
+  - (Optional) You should have Helm (version >= 3.15) installed if you want to deploy with Helm Charts. Refer to the [Helm Installation Guide](https://helm.sh/docs/intro/install/) for more information.
 
-### CodeTrans
+#### Deploy Examples
 
-[CodeTrans](./CodeTrans/README.md) is an example of chatbot for converting code written in one programming language to another programming language while maintaining the same functionality.
+| Use Case          | Docker Compose<br/>Deployment on Xeon                                          | Docker Compose<br/>Deployment on Gaudi                                     | Kubernetes with Manifests                                                        | Kubernetes with Helm Charts                                                                                        | Kubernetes with GMC                                                |
+| ----------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| ChatQnA           | [Xeon Instructions](ChatQnA/docker_compose/intel/cpu/xeon/README.md)           | [Gaudi Instructions](ChatQnA/docker_compose/intel/hpu/gaudi/README.md)     | [ChatQnA with Manifests](ChatQnA/kubernetes/intel/README.md)                     | [ChatQnA with Helm Charts](https://github.com/opea-project/GenAIInfra/tree/main/helm-charts/chatqna/README.md)     | [ChatQnA with GMC](ChatQnA/kubernetes/intel/README_gmc.md)         |
+| CodeGen           | [Xeon Instructions](CodeGen/docker_compose/intel/cpu/xeon/README.md)           | [Gaudi Instructions](CodeGen/docker_compose/intel/hpu/gaudi/README.md)     | [CodeGen with Manifests](CodeGen/kubernetes/intel/README.md)                     | [CodeGen with Helm Charts](https://github.com/opea-project/GenAIInfra/tree/main/helm-charts/codegen/README.md)     | [CodeGen with GMC](CodeGen/kubernetes/intel/README_gmc.md)         |
+| CodeTrans         | [Xeon Instructions](CodeTrans/docker_compose/intel/cpu/xeon/README.md)         | [Gaudi Instructions](CodeTrans/docker_compose/intel/hpu/gaudi/README.md)   | [CodeTrans with Manifests](CodeTrans/kubernetes/intel/README.md)                 | [CodeTrans with Helm Charts](https://github.com/opea-project/GenAIInfra/tree/main/helm-charts/codetrans/README.md) | [CodeTrans with GMC](CodeTrans/kubernetes/intel/README_gmc.md)     |
+| DocSum            | [Xeon Instructions](DocSum/docker_compose/intel/cpu/xeon/README.md)            | [Gaudi Instructions](DocSum/docker_compose/intel/hpu/gaudi/README.md)      | [DocSum with Manifests](DocSum/kubernetes/intel/README.md)                       | [DocSum with Helm Charts](https://github.com/opea-project/GenAIInfra/tree/main/helm-charts/docsum/README.md)       | [DocSum with GMC](DocSum/kubernetes/intel/README_gmc.md)           |
+| SearchQnA         | [Xeon Instructions](SearchQnA/docker_compose/intel/cpu/xeon/README.md)         | [Gaudi Instructions](SearchQnA/docker_compose/intel/hpu/gaudi/README.md)   | Not Supported                                                                    | Not Supported                                                                                                      | [SearchQnA with GMC](SearchQnA/kubernetes/intel/README_gmc.md)     |
+| FaqGen            | [Xeon Instructions](FaqGen/docker_compose/intel/cpu/xeon/README.md)            | [Gaudi Instructions](FaqGen/docker_compose/intel/hpu/gaudi/README.md)      | [FaqGen with Manifests](FaqGen/kubernetes/intel/README.md)                       | Not Supported                                                                                                      | [FaqGen with GMC](FaqGen/kubernetes/intel/README_gmc.md)           |
+| Translation       | [Xeon Instructions](Translation/docker_compose/intel/cpu/xeon/README.md)       | [Gaudi Instructions](Translation/docker_compose/intel/hpu/gaudi/README.md) | [Translation with Manifests](Translation/kubernetes/intel/README.md)             | Not Supported                                                                                                      | [Translation with GMC](Translation/kubernetes/intel/README_gmc.md) |
+| AudioQnA          | [Xeon Instructions](AudioQnA/docker_compose/intel/cpu/xeon/README.md)          | [Gaudi Instructions](AudioQnA/docker_compose/intel/hpu/gaudi/README.md)    | [AudioQnA with Manifests](AudioQnA/kubernetes/intel/README.md)                   | Not Supported                                                                                                      | [AudioQnA with GMC](AudioQnA/kubernetes/intel/README_gmc.md)       |
+| VisualQnA         | [Xeon Instructions](VisualQnA/docker_compose/intel/cpu/xeon/README.md)         | [Gaudi Instructions](VisualQnA/docker_compose/intel/hpu/gaudi/README.md)   | [VisualQnA with Manifests](VisualQnA/kubernetes/intel/README.md)                 | Not Supported                                                                                                      | [VisualQnA with GMC](VisualQnA/kubernetes/intel/README_gmc.md)     |
+| ProductivitySuite | [Xeon Instructions](ProductivitySuite/docker_compose/intel/cpu/xeon/README.md) | Not Supported                                                              | [ProductivitySuite with Manifests](ProductivitySuite/kubernetes/intel/README.md) | Not Supported                                                                                                      | Not Supported                                                      |
 
-<table>
-	<tbody>
-		<tr>
-			<td>Framework</td>
-			<td>LLM</td>
-			<td>Serving</td>
-			<td>HW</td>
-			<td>Description</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/HuggingFaceH4/mistral-7b-grok">HuggingFaceH4/mistral-7b-grok</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a></td>
-			<td>Xeon/Gaudi2</td>
-			<td>Code Translation</td>
-		</tr>
-	</tbody>
-</table>
+## Supported Examples
 
-### DocSum
+Check [here](./supported_examples.md) for detailed information of supported examples, models, hardwares, etc.
 
-[DocSum](./DocSum/README.md) is an example of chatbot for summarizing the content of documents or reports.
+## Contributing to OPEA
 
-<table>
-	<tbody>
-		<tr>
-			<td>Framework</td>
-			<td>LLM</td>
-			<td>Serving</td>
-			<td>HW</td>
-			<td>Description</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/Intel/neural-chat-7b-v3-3">NeuralChat-7B</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a></td>
-			<td>Xeon/Gaudi2</td>
-			<td>Chatbot</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/mistralai/Mistral-7B-v0.1">Mistral-7B</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a></td>
-			<td>Xeon/Gaudi2</td>
-			<td>Chatbot</td>
-		</tr>
-	</tbody>
-</table>
+Welcome to the OPEA open-source community! We are thrilled to have you here and excited about the potential contributions you can bring to the OPEA platform. Whether you are fixing bugs, adding new GenAI components, improving documentation, or sharing your unique use cases, your contributions are invaluable.
 
-### Language Translation
+Together, we can make OPEA the go-to platform for enterprise AI solutions. Let's work together to push the boundaries of what's possible and create a future where AI is accessible, efficient, and impactful for everyone.
 
-[Language Translation](./Translation/README.md) is an example of chatbot for converting a source-language text to an equivalent target-language text.
+Please check the [Contributing guidelines](https://github.com/opea-project/docs/tree/main/community/CONTRIBUTING.md) for a detailed guide on how to contribute a GenAI component and all the ways you can contribute!
 
-<table>
-	<tbody>
-		<tr>
-			<td>Framework</td>
-			<td>LLM</td>
-			<td>Serving</td>
-			<td>HW</td>
-			<td>Description</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/haoranxu/ALMA-13B">haoranxu/ALMA-13B</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a></td>
-			<td>Xeon/Gaudi2</td>
-			<td>Language Translation</td>
-		</tr>
-	</tbody>
-</table>
-
-### SearchQnA
-
-[SearchQnA](./SearchQnA/README.md) is an example of chatbot for using search engine to enhance QA quality.
-
-<table>
-	<tbody>
-		<tr>
-			<td>Framework</td>
-			<td>LLM</td>
-			<td>Serving</td>
-			<td>HW</td>
-			<td>Description</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/Intel/neural-chat-7b-v3-3">NeuralChat-7B</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a></td>
-			<td>Xeon/Gaudi2</td>
-			<td>Chatbot</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/mistralai/Mistral-7B-v0.1">Mistral-7B</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a></td>
-			<td>Xeon/Gaudi2</td>
-			<td>Chatbot</td>
-		</tr>
-	</tbody>
-</table>
-
-### VisualQnA
-
-[VisualQnA](./VisualQnA/README.md) is an example of chatbot for question and answering based on the images.
-
-<table>
-	<tbody>
-		<tr>
-			<td>Framework</td>
-			<td>LLM</td>
-			<td>Serving</td>
-			<td>HW</td>
-			<td>Description</td>
-		</tr>
-		<tr>
-			<td><a href="https://www.langchain.com">LangChain</a></td>
-			<td><a href="https://huggingface.co/llava-hf/llava-1.5-7b-hf">LLaVA-1.5-7B</a></td>
-			<td><a href="https://github.com/huggingface/text-generation-inference">TGI</a></td>
-			<td>Gaudi2</td>
-			<td>Chatbot</td>
-		</tr>
-	</tbody>
-</table>
+Thank you for being a part of this journey. We can't wait to see what we can achieve together!
 
 ## Additional Content
 
-- [Contribution](/CONTRIBUTING.md)
-- [Legal Information](/LEGAL_INFORMATION.md)
-- [Security Policy](/SECURITY.md)
+- [Code of Conduct](https://github.com/opea-project/docs/tree/main/community/CODE_OF_CONDUCT.md)
+- [Security Policy](https://github.com/opea-project/docs/tree/main/community/SECURITY.md)
+- [Legal Information](LEGAL_INFORMATION.md)

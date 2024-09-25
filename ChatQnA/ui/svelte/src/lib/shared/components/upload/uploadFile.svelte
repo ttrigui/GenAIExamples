@@ -23,19 +23,24 @@
 	import {
 		knowledge1,
 		knowledgeName,
+		storageFiles,
 	} from "$lib/shared/stores/common/Store";
-	import DeleteIcon from "$lib/assets/avatar/svelte/Delete.svelte";
 	import { getNotificationsContext } from "svelte-notifications";
 	import {
+		fetchAllFile,
 		fetchKnowledgeBaseId,
 		fetchKnowledgeBaseIdByPaste,
 	} from "$lib/network/upload/Network";
+	import DocCard from "../doc_management/docCard.svelte";
+	import NoFile from "$lib/assets/upload/no-file.svelte";
+	import LoadingButton from "$lib/assets/upload/loading-button.svelte";
 
 	const { addNotification } = getNotificationsContext();
-	console.log("allKnowledges", $knowledgeName);
 
+	$: files = $storageFiles ? $storageFiles : [];
 	let hidden6 = true;
-	let selectKnowledge = -1;
+	let uploading = false;
+
 	let transitionParamsRight = {
 		x: 320,
 		duration: 200,
@@ -45,56 +50,58 @@
 	async function handleKnowledgePaste(
 		e: CustomEvent<{ pasteUrlList: string[] }>
 	) {
-		let knowledge_id = "";
-		// let knowledge_id2 = "";
+		uploading = true;
 		try {
 			const pasteUrlList = e.detail.pasteUrlList;
-			const res = await fetchKnowledgeBaseIdByPaste(pasteUrlList, "url1");
-			// sihan
-			knowledge_id = res.knowledge_base_id ? res.knowledge_base_id : "default";
+			const res = await fetchKnowledgeBaseIdByPaste(pasteUrlList);
+			handleUploadResult(res, "knowledge_base");
 		} catch {
-			knowledge_id = "default";
+			handleUploadError();
 		}
-		knowledge1.set({ id: knowledge_id });
-		knowledgeName.set('knowledge_base');
-
-		addNotification({
-			text: "Uploaded successfully",
-			position: "top-left",
-			type: "success",
-			removeAfter: 3000,
-		});
 	}
 
 	async function handleKnowledgeUpload(e: CustomEvent<any>) {
-		let knowledge_id = "";
-		// let knowledge_id2 = "";
+		uploading = true;
 		try {
 			const blob = await fetch(e.detail.src).then((r) => r.blob());
 			const fileName = e.detail.fileName;
-			// letong
 			const res = await fetchKnowledgeBaseId(blob, fileName);
-			// sihan
-			knowledge_id = res.knowledge_base_id ? res.knowledge_base_id : "default";
-			// knowledge_id2 = res2.knowledge_base_id ? res2.knowledge_base_id : "default";
-			console.log("knowledge_id", knowledge_id);
+			handleUploadResult(res, fileName);
 		} catch {
-			knowledge_id = "default";
-			// knowledge_id2 = "default";
+			handleUploadError();
 		}
-		knowledge1.set({ id: knowledge_id });
-		knowledgeName.set(e.detail.fileName);
-		addNotification({
-			text: "Uploaded successfully",
-			position: "top-left",
-			type: "success",
-			removeAfter: 3000,
-		});
 	}
 
-	function handleKnowledgeDelete() {
-		knowledge1.set({ id: "default" });
-		knowledgeName.set("");
+	async function handleUploadResult(res: Response, fileName: string) {
+		if (res.status === 200) {
+			knowledge1.set({ id: "default" });
+			knowledgeName.set(fileName);
+			showNotification("Uploaded successfully", "success");
+			// update fileStructure
+			const res = await fetchAllFile();
+			uploading = false;
+			console.log('handleUploadResult', res);
+
+			if (res) {
+				storageFiles.set(res);
+				files = $storageFiles;
+			}
+		} else {
+			showNotification("Uploaded failed", "error");
+		}
+	}
+
+	function handleUploadError() {
+		showNotification("Uploaded failed", "error");
+	}
+
+	function showNotification(text: string, type: string) {
+		addNotification({
+			text: text,
+			position: "top-left",
+			type: type,
+			removeAfter: 3000,
+		});
 	}
 </script>
 
@@ -103,7 +110,6 @@
 		on:click={() => (hidden6 = false)}
 		class="bg-transparent focus-within:ring-gray-300 hover:bg-transparent focus:ring-0"
 		data-testid="open-upload"
-
 	>
 		<svg
 			aria-hidden="true"
@@ -128,7 +134,7 @@
 	transitionType="fly"
 	transitionParams={transitionParamsRight}
 	bind:hidden={hidden6}
-	class=" shadow border-2 border-r-0 border-b-0"
+	class=" border-2 border-b-0 border-r-0 shadow"
 	id="sidebar6"
 >
 	<div class="flex items-center">
@@ -147,6 +153,7 @@
 		Please upload your local file or paste a remote file link, and Chat will
 		respond based on the content of the uploaded file.
 	</p>
+
 	<Tabs
 		style="full"
 		defaultClass="flex rounded-lg divide-x rtl:divide-x-reverse divide-gray-200 shadow dark:divide-gray-700 focus:ring-0"
@@ -155,15 +162,23 @@
 			<span slot="title">Upload File</span>
 			<UploadFile on:upload={handleKnowledgeUpload} />
 		</TabItem>
-		<TabItem class="w-full">
+		<TabItem class="w-full" data-testid="exchange-paste">
 			<span slot="title">Paste Link</span>
 			<PasteURL on:paste={handleKnowledgePaste} />
 		</TabItem>
 	</Tabs>
-	{#if ($knowledgeName) && ($knowledgeName !== "")}
-		<div class="relative">
-			<p class="border-b p-6 pb-2">{$knowledgeName}</p>
-			<DeleteIcon on:DeleteAvatar={() => handleKnowledgeDelete()} />
+	{#if uploading}
+		<div class="flex flex-col items-center justify-center my-6">
+			<LoadingButton />
+		</div>
+	{/if}
+
+	{#if files.length > 0}
+		<DocCard {files} />
+	{:else}
+		<div class="flex flex-col items-center justify-center mt-6">
+			<NoFile />
+			<p class=" text-sm opacity-70">No files uploaded</p>
 		</div>
 	{/if}
 </Drawer>

@@ -1,0 +1,150 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: Image Build
+permissions: read-all
+on:
+  workflow_call:
+    inputs:
+      registry:
+        description: Container Registry URL
+        required: false
+        default: ""
+        type: string
+      tag:
+        description: Container Tag
+        required: false
+        default: "latest"
+        type: string
+      example:
+        description: Example to test
+        required: true
+        type: string
+      hardware:
+        description: Hardware to run the test on
+        required: true
+        type: string
+      diff_excluded_files:
+        required: false
+        type: string
+        default: ""
+jobs:
+  get-test-case:
+    runs-on: ubuntu-latest
+    outputs:
+      test_cases: ${{ steps.test-case-matrix.outputs.test_cases }}
+      CHECKOUT_REF: ${{ steps.get-checkout-ref.outputs.CHECKOUT_REF }}
+    steps:
+      - name: Get checkout ref
+        id: get-checkout-ref
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ github.event_name }}" == "pull_request_target" ]; then
+            CHECKOUT_REF=refs/pull/${{ github.event.number }}/merge
+          else
+            CHECKOUT_REF=${{ github.ref }}
+          fi
+          echo "CHECKOUT_REF=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
+          echo "checkout ref ${CHECKOUT_REF}"
+
+      - name: Checkout out Repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.get-checkout-ref.outputs.CHECKOUT_REF }}
+          fetch-depth: 0
+
+      - name: Get test matrix
+        shell: bash
+        id: test-case-matrix
+        run: |
+          example_l=$(echo ${{ inputs.example }} | tr '[:upper:]' '[:lower:]')
+          cd ${{ github.workspace }}/${{ inputs.example }}/tests
+          run_test_cases=""
+
+          default_test_case=$(find . -type f -name "test_compose_on_${{ inputs.hardware }}.sh" | cut -d/ -f2)
+          if [ "$default_test_case" ]; then run_test_cases="$default_test_case"; fi
+          other_test_cases=$(find . -type f -name "test_compose_*_on_${{ inputs.hardware }}.sh" | cut -d/ -f2)
+          echo "default_test_case=$default_test_case"
+          echo "other_test_cases=$other_test_cases"
+
+          if [ "${{ inputs.tag }}" == "ci" ]; then
+              base_commit=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/opea-project/GenAIExamples/commits?sha=${{ github.event.pull_request.base.ref }}" | jq -r '.[0].sha')
+              merged_commit=$(git log -1 --format='%H')
+              changed_files="$(git diff --name-only ${base_commit} ${merged_commit} | grep -vE '${{ inputs.diff_excluded_files }}')" || true
+          fi
+
+          for test_case in $other_test_cases; do
+              if [ "${{ inputs.tag }}" == "ci" ]; then
+                  flag=${test_case%_on_*}
+                  flag=${flag#test_compose_}
+                  if [[ $(printf '%s\n' "${changed_files[@]}" | grep ${{ inputs.example }} | grep ${flag}) ]]; then
+                      run_test_cases="$run_test_cases $test_case"
+                  fi
+              else
+                  run_test_cases="$run_test_cases $test_case"
+              fi
+          done
+
+          test_cases=$(echo $run_test_cases | tr ' ' '\n' | sort -u | jq -R '.' | jq -sc '.')
+          echo "test_cases=$test_cases"
+          echo "test_cases=$test_cases" >> $GITHUB_OUTPUT
+
+  run-test:
+    needs: [get-test-case]
+    strategy:
+      matrix:
+        test_case: ${{ fromJSON(needs.get-test-case.outputs.test_cases) }}
+      fail-fast: false
+    runs-on: ${{ inputs.hardware }}
+    continue-on-error: true
+    steps:
+      - name: Clean up Working Directory
+        run: |
+          sudo rm -rf ${{github.workspace}}/* || true
+          docker system prune -f
+          docker rmi $(docker images --filter reference="*/*/*:latest" -q) || true
+          docker rmi $(docker images --filter reference="*/*:ci" -q) || true
+
+      - name: Checkout out Repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.get-test-case.outputs.CHECKOUT_REF }}
+          fetch-depth: 0
+
+      - name: Run test
+        shell: bash
+        env:
+          HUGGINGFACEHUB_API_TOKEN: ${{ secrets.HUGGINGFACEHUB_API_TOKEN }}
+          GOOGLE_CSE_ID: ${{ secrets.GOOGLE_CSE_ID }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          PINECONE_KEY: ${{ secrets.PINECONE_KEY }}
+          IMAGE_REPO: ${{ inputs.registry }}
+          IMAGE_TAG: ${{ inputs.tag }}
+          example: ${{ inputs.example }}
+          hardware: ${{ inputs.hardware }}
+          test_case: ${{ matrix.test_case }}
+        run: |
+          cd ${{ github.workspace }}/$example/tests
+          if [[ "$IMAGE_REPO" == "" ]]; then export IMAGE_REPO="${OPEA_IMAGE_REPO}opea"; fi
+          if [ -f ${test_case} ]; then timeout 30m bash ${test_case}; else echo "Test script {${test_case}} not found, skip test!"; fi
+
+      - name: Clean up container
+        shell: bash
+        if: cancelled() || failure()
+        run: |
+          cd ${{ github.workspace }}/${{ inputs.example }}/docker_compose
+          test_case=${{ matrix.test_case }}
+          flag=${test_case%_on_*}
+          flag=${flag#test_}
+          yaml_file=$(find . -type f -wholename "*${{ inputs.hardware }}/${flag}.yaml")
+          echo $yaml_file
+          docker compose -f $yaml_file stop && docker compose -f $yaml_file rm -f || true
+          docker system prune -f
+          docker rmi $(docker images --filter reference="*:5000/*/*" -q) || true
+
+      - name: Publish pipeline artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.example }}_${{ matrix.test_case }}
+          path: ${{ github.workspace }}/${{ inputs.example }}/tests/*.log
