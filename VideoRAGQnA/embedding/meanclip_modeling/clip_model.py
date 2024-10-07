@@ -11,6 +11,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
+import pdb
 
 
 _MODELS = {
@@ -279,7 +280,14 @@ class VisualTransformer(nn.Module):
         x = x.reshape(x.shape[0], x.shape[1], -1)  # shape = [*, width, grid ** 2]
         x = x.permute(0, 2, 1)  # shape = [*, grid ** 2, width]
         x = torch.cat([self.class_embedding.to(x.dtype) + torch.zeros(x.shape[0], 1, x.shape[-1], dtype=x.dtype, device=x.device), x], dim=1)  # shape = [*, grid ** 2 + 1, width]
+        positional_embedding = self.positional_embedding[:x.shape[1],:]
+        print("before the add")
+        #print("x is", x)
+        #print("positional_embedding is", positional_embedding)
+        #x = x + positional_embedding.to(x.dtype)
         x = x + self.positional_embedding.to(x.dtype)
+        #print("after the add")
+        #print("x is", x)
         x = self.ln_pre(x)
 
         x = x.permute(1, 0, 2)  # NLD -> LND
@@ -504,7 +512,13 @@ def build_model(state_dict: dict, load_state_dict: bool=False, fp16=True):
         image_resolution = output_width * 32
 
     embed_dim = state_dict["text_projection"].shape[1]
+    print("inside clip_model.py")
+    print(" inside build_model is")
+    print(" context_length is ")
+
     context_length = state_dict["positional_embedding"].shape[0]
+    #pdb.set_trace()
+    print(context_length)
     vocab_size = state_dict["token_embedding.weight"].shape[0]
     transformer_width = state_dict["ln_final.weight"].shape[0]
     transformer_heads = transformer_width // 64

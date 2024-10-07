@@ -1,3 +1,6 @@
+from timm.data import ToTensor
+from torchvision.transforms import Resize
+
 from langchain_community.vectorstores import VDMS
 from langchain_community.vectorstores.vdms import VDMS_Client
 from langchain.pydantic_v1 import BaseModel, root_validator
@@ -14,6 +17,8 @@ from embedding.meanclip_datasets.preprocess import get_transforms
 from einops import rearrange
 from PIL import Image
 import torch
+import torchvision.transforms as transforms
+from transformers import CLIPProcessor, CLIPModel
 import uuid
 import os
 import time
@@ -87,7 +92,7 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
 
     def embed_video(self, paths: List[str], **kwargs: Any) -> List[List[float]]:
         # Open images directly as PIL images
-
+        print("i am in embed_video")
         video_features = []
         for vid_path in sorted(paths):
             # Encode the video to get the embeddings
@@ -95,10 +100,12 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
             # Preprocess the video for the model
             videos_tensor= self.load_video_for_meanclip(vid_path, num_frm=self.model.num_frm,
                                                                               max_img_size=224,
-                                                                              start_time=kwargs.get("start_time", None),
+                                                                             start_time=kwargs.get("start_time", None),
                                                                               clip_duration=kwargs.get("clip_duration", None)
                                                                               )
+            print("i just came out from load_video_for_meanclip in embed_video")
             embeddings_tensor = self.model.get_video_embeddings(videos_tensor.unsqueeze(0).to(model_device))
+            print("i am just after get_video_embeddings in embed_video")
 
             # Convert tensor to list and add to the video_features list
             embeddings_list = embeddings_tensor.squeeze(0).tolist()
@@ -107,9 +114,75 @@ class MeanCLIPEmbeddings(BaseModel, Embeddings):
 
         return video_features
 
+    def embed_image(self, paths: List[str], **kwargs: Any) -> List[List[float]]:
+        # Open images directly as PIL images
+        print("i am in embed_image")
+        #print(paths)
+
+        """
+
+        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        #image = Image.open(paths)
+        image = paths
+
+        #image_pil = Image.fromarray((paths * 255).astype(np.uint8))
+
+        inputs = processor(images=image, return_tensors="pt")
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        model = model.to(device)
+        inputs = {k: v.to(device) for k, v in inputs.items()}
+        with torch.no_grad():
+            image_embeddings = model.get_image_features(**inputs)
+        print("image embeddings:", image_embeddings)
+        print("shape of embeddings:", image_embeddings.shape)
+
+        
+        
+        embeddings_list = image_embeddings.squeeze(0).tolist()
+        return embeddings_list
+        """
+
+
+        image_pil = Image.fromarray((paths
+                                     * 255).astype(np.uint8))
+        #transform = transforms.Compose([transforms.ToTensor(),
+        #                                transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
+        #                                ])
+
+        n_px = 224
+        transform = transforms.Compose([transforms.Resize(n_px,interpolation=Image.BICUBIC),
+                                        transforms.CenterCrop(n_px),
+                                        transforms.Lambda(lambda img: img.convert('RGB')),
+                                        transforms.ToTensor(),
+                                        transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))])
+
+        image_tensor = transform(image_pil)
+
+        print("image_tensor.shape:", image_tensor.shape)
+
+
+        model_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        embeddings_tensor = self.model.get_frame_embeddings(image_tensor.unsqueeze(0).unsqueeze(0).to(model_device))
+
+        # Convert tensor to list and add to the video_features list
+        embeddings_list = embeddings_tensor.squeeze(0).tolist()
+        
+
+        #print("embeddings_list")
+        #print(embeddings_list)
+        return embeddings_list
+
+
+
+
+
+
 
     def load_video_for_meanclip(self, vis_path, num_frm=64, max_img_size=224, **kwargs):
         # Load video with VideoReader
+        print("i am in load_video_for_meanclip")
         vr = VideoReader(vis_path, ctx=cpu(0))
         fps = vr.get_avg_fps()
         num_frames = len(vr)
@@ -209,9 +282,18 @@ class VideoVS:
             self.update_image_retriever = self.video_db.as_retriever(search_type=self.chosen_video_search_type, search_kwargs={'k':n_images})
     
     def MultiModalRetrieval(self, query: str, top_k: Optional[int] = 3):
-        self.update_db(query, top_k)
+        #self.update_db(query, top_k)
         #video_results = self.video_retriever.invoke(query)
         video_results = self.video_db.similarity_search_with_score(query=query, k=top_k, filter=self.constraints)
+        #for r, score in video_results:
+        #    print("videos:", r.metadata['video_path'], '\t', r.metadata['date'], '\t', r.metadata['time'], r.metadata['timestamp'], f"score: {score}", r, '\n')
+
+        return video_results
+
+    def MultiModalRetrieval1(self, query: str, top_k: Optional[int] = 3):
+        #self.update_db(query, top_k)
+        #video_results = self.video_retriever.invoke(query)
+        video_results = self.video_db.similarity_search_with_score1(query=query, k=top_k, filter=self.constraints)
         #for r, score in video_results:
         #    print("videos:", r.metadata['video_path'], '\t', r.metadata['date'], '\t', r.metadata['time'], r.metadata['timestamp'], f"score: {score}", r, '\n')
 

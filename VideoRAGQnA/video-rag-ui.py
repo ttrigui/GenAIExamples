@@ -5,7 +5,11 @@ import time
 import torch
 
 import torch
+import pdb
 import streamlit as st
+from streamlit_drawable_canvas import st_canvas
+import numpy as np
+from PIL import Image
 #from transformers import AutoTokenizer
 from transformers import LlamaTokenizer, AutoModelForCausalLM, TextIteratorStreamer
 from transformers import set_seed
@@ -26,6 +30,7 @@ from embedding.video_llama.common.registry import registry
 from embedding.video_llama.conversation.conversation_video import Chat, Conversation, default_conversation,SeparatorStyle,conv_llava_llama_2
 import decord
 decord.bridge.set_bridge('torch')
+import cv2
 
 
 
@@ -133,6 +138,7 @@ vis_processor_cfg = video_llama.cfg.datasets_cfg.webvid.vis_processor.train
 vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
 print("-"*30)
 print("initializing model")
+#pdb.set_trace()
 chat = Chat(video_llama.model, vis_processor, device=device)
 
 def chat_reset(chat_state, img_list):
@@ -190,7 +196,73 @@ def play_video(x, offset, duration):
         video_file = open(x, 'rb')
         video_bytes = video_file.read()
         st.video(video_bytes, start_time=int(offset))
-        
+        print("i am in the play_video function")
+
+        print("video_file is ",x)
+        cap = cv2.VideoCapture(x)
+        stframe = st.empty()
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            #stframe.image(frame_rgb, caption=f"frame {x}")
+            stframe.image(frame_rgb,channels="RGB")
+            break
+        #image_np = np.array(frame_rgb)
+        max_width = 300
+        scale = max_width / frame_rgb.shape[1]
+        frame_resized = cv2.resize(frame_rgb,(0,0), fx=scale, fy=scale)
+        frame_pil = Image.fromarray(frame_resized)
+        img_height, img_width = frame_resized.shape[:2]
+        #frame_pil = Image.fromarray(frame_rgb)
+        #print("height is",frame_rgb.shape[0])
+        #print("width is",frame_rgb.shape[1])
+        #stframe.image(frame_rgb, channels="RGB")
+        #img_height,img_width=frame_rgb.shape[:2]
+        st.write(f"IMage dimensions: {img_width}x{img_height}")
+        canvas_result = st_canvas(
+            fill_color="rgba(255,165,0,0.3)",
+            stroke_width=2,
+            background_image=frame_pil,
+            update_streamlit=True,
+            height=img_height,
+            width=img_width,
+            drawing_mode="rect",
+            key="canvas",
+        )
+        if canvas_result:
+            st.write(f"canvas dimensions: {img_width}x{img_height}")
+        if canvas_result.json_data is not None:
+            objects = canvas_result.json_data["objects"]
+            if objects:
+                rect = objects[0]
+                x,y,w,h = rect["left"],rect["top"],rect["width"],rect["height"]
+                roi = frame_resized[int(y):int(y+h),int(x):int(x+w)]
+                st.image(roi, caption='Extracted ROI',use_column_width=True)
+                results = st.session_state.vs.MultiModalRetrieval1(roi, top_k=3)
+
+                result = get_top_doc(results, st.session_state["qcnt"])
+                #result = get_top_doc(results, 1)
+                if result == None:
+                    return None
+                try:
+                    top_doc, score = result
+                except:
+                    top_doc = result
+                print('TOP DOC = ', top_doc.metadata['video'])
+                #print(top_doc)
+                print("PLAYBACK OFFSET = ", top_doc.metadata['timestamp'])
+                video_name, playback_offset, video_path = top_doc.metadata['video'], int(top_doc.metadata['timestamp']), \
+                top_doc.metadata['video_path']
+
+                video_file = open(video_path, 'rb')
+                video_bytes = video_file.read()
+                st.video(video_bytes, start_time=int(offset))
+
+        cap.release()
+
+
         #video_bytes = extract_clip_with_opencv(x, offset, duration)
         #print("len-video_bytes:", len(video_bytes))
         #st.video(video_bytes, start_time=0)

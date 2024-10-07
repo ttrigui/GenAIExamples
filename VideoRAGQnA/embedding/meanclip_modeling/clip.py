@@ -4,6 +4,7 @@ import urllib
 import warnings
 from typing import Union, List
 from pkg_resources import packaging
+import pdb
 
 import torch
 from PIL import Image
@@ -113,6 +114,7 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
     else:
         raise RuntimeError(f"Model {name} not found; available models = {available_models()}")
 
+    pdb.set_trace()
     with open(model_path, 'rb') as opened_file:
         try:
             # loading JIT archive
@@ -126,6 +128,10 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
             state_dict = torch.load(opened_file, map_location="cpu")
 
     if not jit:
+        print("in clip.py, load, before build_model")
+        print("state_dict is")
+        print(state_dict)
+
         model = build_model(state_dict or model.state_dict(), load_state_dict=True).to(device)
         if str(device) == "cpu":
             model.float()

@@ -59,6 +59,23 @@ class MeanCLIP(nn.Module):
 
     def get_visual_output(self, visual_inputs):
         b = visual_inputs.shape[0]
+        print("i am in get_visual_output")
+        print("b is")
+        print(b)
+        print("visual_inputs shape is")
+        print(visual_inputs.shape)
+        visual_inputs = rearrange(visual_inputs, "b n c h w -> (b n) c h w")
+        frame_embd = self.clip.encode_image(visual_inputs).float()
+        frame_embd = rearrange(frame_embd, "(b n) d -> b n d", b=b)
+        return frame_embd
+
+    def get_frame_embeddings(self, visual_inputs):
+        print("get_frame_embeddings")
+        #print("visual_inputs", visual_inputs)
+        b = visual_inputs.shape[0]
+        print("b")
+        print(b)
+        print("visual inputs.shape", visual_inputs.shape)
         visual_inputs = rearrange(visual_inputs, "b n c h w -> (b n) c h w")
         frame_embd = self.clip.encode_image(visual_inputs).float()
         frame_embd = rearrange(frame_embd, "(b n) d -> b n d", b=b)
